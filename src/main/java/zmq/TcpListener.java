@@ -120,7 +120,7 @@ public class TcpListener extends Own implements IPollEvents
         socket.eventAccepted(endpoint, fd);
     }
 
-    //  Close the listening socket.
+    //  关闭监听socket
     private void close()
     {
         if (handle == null) {
@@ -142,7 +142,7 @@ public class TcpListener extends Own implements IPollEvents
         return address.toString();
     }
 
-    //  Set address to listen on.
+    //  设置监听地址
     public int setAddress(final String addr)
     {
         address.resolve(addr, options.ipv4only > 0);

@@ -627,6 +627,8 @@ public class ZMQ
     }
     /**
      * Polling on items with given selector
+     * 
+     * 在给定selector上poll item
      * CAUTION: This could be affected by jdk epoll bug
      *
      * @param selector Open and reuse this selector and do not forget to close when it is not used.
@@ -667,7 +669,7 @@ public class ZMQ
                 continue;
             }
 
-            SelectableChannel ch = item.getChannel(); // mailbox channel if ZMQ socket
+            SelectableChannel ch = item.getChannel(); // mailbox channel if ZMQ socket 信箱通道
             SelectionKey key = saved.remove(ch);
 
             if (key != null) {
@@ -697,7 +699,7 @@ public class ZMQ
         int ready;
 
         while (true) {
-            //  Compute the timeout for the subsequent poll.
+            //  Compute the timeout for the subsequent poll. 计算超时时间
             long waitMillis;
             if (firstPass) {
                 waitMillis = 0L;
@@ -709,7 +711,7 @@ public class ZMQ
                 waitMillis = end - now;
             }
 
-            //  Wait for events.
+            //  Wait for events. 等待事件
             try {
                 int rc = 0;
                 if (waitMillis < 0) {

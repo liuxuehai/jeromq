@@ -45,9 +45,10 @@ public class TestProxy
             s.connect("tcp://127.0.0.1:6660");
             s.send("hello", 0);
             String msg = s.recvStr(0);
+            System.out.println(msg);
             s.send("world", 0);
             msg = s.recvStr(0);
-
+            System.out.println(msg);
             s.close();
         }
     }

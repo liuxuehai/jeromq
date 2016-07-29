@@ -54,6 +54,8 @@ public class TestConnectDelay
         ZMQ.setSocketOption(from, ZMQ.ZMQ_LINGER, val);
         rc = ZMQ.connect(from, "tcp://localhost:7556");
         assert (rc);
+        rc = ZMQ.connect(from, "tcp://localhost:7557");
+        assert (rc);
         rc = ZMQ.connect(from, "tcp://localhost:7555");
         assert (rc);
 

@@ -22,6 +22,7 @@ package zmq;
 public class YQueue<T>
 {
     //  Individual memory chunk to hold N elements.
+    //  私有内存块来保存N个元素。
     private static class Chunk<T>
     {
         final T[] values;
@@ -45,6 +46,12 @@ public class YQueue<T>
     //  while begin & end positions are always valid. Begin position is
     //  accessed exclusively be queue reader (front/pop), while back and
     //  end positions are accessed exclusively by queue writer (back/push).
+    /**
+     * Back position 可能指向无效的每次地址,如果队列为空时
+     * 所以begin和end地址总是有效
+     * begin 地址总是队列reader单独访问(front/pop)
+     * end 地址总是队列writer访问(back/push)
+     */
     private Chunk<T> beginChunk;
     private int beginPos;
     private Chunk<T> backChunk;
@@ -57,6 +64,10 @@ public class YQueue<T>
     //  People are likely to produce and consume at similar rates.  In
     //  this scenario holding onto the most recently freed chunk saves
     //  us from having to call malloc/free.
+    /**
+     * 人们趋向于生产和消费在相同的频率上,
+     * 在这种情况下持有到最近释放的块,减少我们不必要的调用malloc/free。
+     */
     private int memoryPtr;
 
     public YQueue(int size)
@@ -111,6 +122,13 @@ public class YQueue<T>
     }
 
     //  Adds an element to the back end of the queue.
+    /**
+     * 添加一个元素到queue的最后面
+     * 
+     * @param val
+     *
+     * @author {yourname} 2016年7月28日 下午2:32:24
+     */
     public void push(T val)
     {
         backChunk.values[backPos] = val;

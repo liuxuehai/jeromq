@@ -30,15 +30,25 @@ public class LB
 
     //  Number of active pipes. All the active pipes are located at the
     //  beginning of the pipes array.
+    /**
+     * active的pipe数,所有active的pipe在pipe数组的开始
+     */
     private int active;
 
     //  Points to the last pipe that the most recent message was sent to.
+    /**
+     * 指向最近的pipe,最近经常被发送的
+     */
     private int current;
 
     //  True if last we are in the middle of a multipart message.
+    /**
+     * 
+     */
     private boolean more;
 
     //  True if we are dropping current message.
+    
     private boolean dropping;
 
     public LB()
@@ -90,6 +100,7 @@ public class LB
     {
         //  Drop the message if required. If we are at the end of the message
         //  switch back to non-dropping mode.
+        // 发送消息如果需要,如果是消息最后切换回不 non-dropping 模式
         if (dropping) {
             more = msg.hasMore();
             dropping = more;
@@ -113,7 +124,7 @@ public class LB
             }
         }
 
-        //  If there are no pipes we cannot send the message.
+        //  If there are no pipes we cannot send the message.  如果没有pipe,那么我们就不能发送消息
         if (active == 0) {
             errno.set(ZError.EAGAIN);
             return false;
@@ -121,6 +132,8 @@ public class LB
 
         //  If it's final part of the message we can flush it downstream and
         //  continue round-robining (load balance).
+        //  如果是最后的部分,就可以flush出去,同时继续负载均衡
+        
         more = msg.hasMore();
         if (!more) {
             pipes.get(current).flush();
@@ -136,12 +149,13 @@ public class LB
     {
         //  If one part of the message was already written we can definitely
         //  write the rest of the message.
+        // 如果部分消息已经写入了，那么我们就可以写入余下的消息
         if (more) {
             return true;
         }
 
         while (active > 0) {
-            //  Check whether a pipe has room for another message.
+            //  Check whether a pipe has room for another message.  检查是否有多余的room给another消息
             if (pipes.get(current).checkWrite()) {
                 return true;
             }

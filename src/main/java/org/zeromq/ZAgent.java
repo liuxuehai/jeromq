@@ -28,23 +28,34 @@ import org.zeromq.ZMQ.Socket;
 /**
  * First implementation of an agent for a remotely controlled background service for 0MQ.
  * Used in conjunction with a ZStar, but not mandatory.
+ * 
+ * agent的一个实现,被0MQ远程控制的一个后台服务
  *<p>
  * An agent is a mechanism allowing to send messages from one thread to another, and to receive messages from this other thread.
+ * 一个agent是允许从一个线程发送消息给另一个线程,并且获取消息从另一个线程,即线程间互通消息
  *<p>
  * Its built-in implementation provides an easy communication-lock
  * system that will close the access once the remote thread is finished.
+ * 
+ * 它的内部实现是提供一个简单的通讯锁
+ * 当远程线程结束活,系统会关闭这个通讯
  *<p>
  * Are proposed for you a restrained set of simple but powerful messaging commands for a quick learning curve
  * and an access to the underlying Socket for advanced usage.
+ * 提出你内敛的一套简单但功能强大的短信指令进行快速的学习曲线
+    并为高级使用底层套接字的访问。
+ * 
  */
 // agent for a remote controlled background message processing API for 0MQ.
 // contract to be agent of a star
+// 代理远程控制的底层消息处理的API0MQ,
 public interface ZAgent
 {
     /**
      * Receives a control message sent from the Plateau in the Corbeille.
      * The call is blocking.
-     *
+     * 获取消息
+     * 该方法为block
      * @return the received message or null if the context was shut down.
      */
     ZMsg recv();
@@ -52,7 +63,7 @@ public interface ZAgent
     /**
      * Receives a control message sent from the Plateau in the Corbeille.
      * The call is blocking depending on the parameter.
-     *
+     * 该方法block可以设置
      * @param wait   true to make a blocking call, false to not wait, and possibly return null
      * @return the received message or null if the context was shut down or if no message if not blocking.
      */
@@ -60,7 +71,7 @@ public interface ZAgent
 
     /**
      * Sends a control message from the Corbeille to the Plateau.
-     *
+     * 发送消息
      * @param message    the message to send
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
      */
@@ -68,7 +79,7 @@ public interface ZAgent
 
     /**
      * Sends a control message from Corbeille side to the Plateau side.
-     *
+     * 发送消息
      * @param msg       the message to send
      * @param destroy   true to destroy the message after sending it.
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
@@ -85,7 +96,7 @@ public interface ZAgent
 
     /**
      * Sends a control message from the Corbeille to the Plateau side.
-     *
+     * 发送消息
      * @param word    the message to send
      * @param more   true to send more strings in a single message
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
@@ -94,7 +105,7 @@ public interface ZAgent
 
     /**
      * Gives a sign if the distant Star is here.
-     *
+     * 如果远程star在本地给一个标记
      * @return true if here, otherwise false
      */
     boolean sign();
@@ -109,7 +120,7 @@ public interface ZAgent
     /**
      * Returns the socket used for communication.
      * For advanced usage.
-     *
+     * 为了其他用途,返回一个通讯的socket
      * @return the socket used to communicate with the distant Star.
      */
     Socket pipe();
@@ -127,13 +138,13 @@ public interface ZAgent
      */
     public static final class SimpleAgent implements ZAgent
     {
-        // the pipe used for communicating with the star
+        // the pipe used for communicating with the star  用于和star进行通讯
         private final Socket pipe;
 
-        // the key used to lock the agent.
+        // the key used to lock the agent. 关键字用于lock这个代理
         private final byte[] lock;
 
-        // the locked state.
+        // the locked state. lock状态
         private boolean locked;
 
         /**
@@ -177,6 +188,7 @@ public interface ZAgent
                 if (lock != null && Arrays.equals(lock, key)) {
                     locked = true;
                     // this is the last message anyway, and not a one for a public display
+                    //这是最后的消息,不能显出
                     msg = null;
                     pipe.close();
                 }
@@ -239,6 +251,7 @@ public interface ZAgent
 
     /**
      * Creates a selector and destroys it.
+     * 创建一个selector和销毁它
      */
     // Contract for selector creation.
     // will be called in backstage side.

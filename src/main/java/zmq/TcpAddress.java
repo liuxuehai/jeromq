@@ -79,6 +79,7 @@ public class TcpAddress implements Address.IZAddress
     public void resolve(String name, boolean ipv4only)
     {
         //  Find the ':' at end that separates address from the port number.
+        //  找到最后一个':' ,分割地址和端口
         int delimiter = name.lastIndexOf(':');
         if (delimiter < 0) {
             throw new IllegalArgumentException(name);
@@ -89,6 +90,7 @@ public class TcpAddress implements Address.IZAddress
         String portStr = name.substring(delimiter + 1);
 
         //  Remove square brackets around the address, if any.
+        // 去掉方括号
         if (addrStr.length() >= 2 && addrStr.charAt(0) == '[' &&
               addrStr.charAt(addrStr.length() - 1) == ']') {
             addrStr = addrStr.substring(1, addrStr.length() - 1);

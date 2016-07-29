@@ -32,6 +32,7 @@ public class Push extends SocketBase
     }
 
     //  Load balancer managing the outbound pipes.
+    // 负载均衡管理分发的pipe
     private final LB lb;
 
     public Push(Ctx parent, int tid, int sid)

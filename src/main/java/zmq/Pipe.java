@@ -278,6 +278,7 @@ class Pipe extends ZObject
         }
 
         if (outpipe != null && !outpipe.flush()) {
+            //reader线程sleeping,调用唤醒reader
             sendActivateRead(peer);
         }
     }

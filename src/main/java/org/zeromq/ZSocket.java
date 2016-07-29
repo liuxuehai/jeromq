@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * ZeroMQ sockets present an abstraction of an asynchronous message queue, with the exact queuing
  * semantics depending on the socket type in use. Where conventional sockets transfer streams of
  * bytes or discrete datagrams, ZeroMQ sockets transfer discrete messages.
+ * ZeroMQ sockets 是一个抽象的异步消息队列 
  * <p>
  * ZeroMQ sockets being asynchronous means that the timings of the physical connection setup and
  * tear down, reconnect and effective delivery are transparent to the user and organized by ZeroMQ
@@ -48,6 +49,7 @@ public class ZSocket implements AutoCloseable
 
     /**
      * Creates an endpoint for accepting connections and binds to it.
+     * 
      * <p>
      * The endpoint argument is a string consisting of two parts as follows: transport ://address. The
      * transport part specifies the underlying transport protocol to use. The meaning of the address

@@ -35,6 +35,11 @@ import org.zeromq.ZMQ.Socket;
  * unfinished multipart message.  The send() method normally destroys the frame, but with the ZFRAME_REUSE flag, you can send
  * the same frame many times. Frames are binary, and this class has no special support for text data.
  *
+ *  ZFrame 提供方法通过OMQ sockets 发送和接收单个消息frame,
+ *  一个 frame对应于一个底层的zmq_msg_t在libznq中,当你通过一个socket读取一个frame时,
+ *  more()方法指明这个frame是否为一个未结束的消息的一部分.
+ *  send()方式正常的销毁frame,如果有ZFRAME_REUSE标记,你可以发送这个frame多次.
+ *  Frame是2进制的,对于text数据病没有特殊处理
  */
 
 public class ZFrame
@@ -51,6 +56,8 @@ public class ZFrame
      * Class Constructor
      * Creates an empty frame.
      * (Useful when reading frames from a 0MQ Socket)
+     * 
+     * 创建一个空方frame,(用于通过OMQ Socket读取数据)
      */
     protected ZFrame()
     {
@@ -59,6 +66,8 @@ public class ZFrame
     /**
      * Class Constructor
      * Copies message data into ZFrame object
+     * 
+     * 复制消息数据到ZFrame对象
      * @param data
      *          Data to copy into ZFrame object
      */
@@ -72,6 +81,8 @@ public class ZFrame
     /**
      * Class Constructor
      * Copies String into frame data
+     * 
+     * 复制消息数据到ZFrame对象
      * @param data
      */
     public ZFrame(String data)
@@ -100,7 +111,9 @@ public class ZFrame
     }
 
     /**
+     * more标记,如果为true,则表明还有更多消息存在
      * @return More flag, true if last read had MORE message parts to come
+     *      
      */
     public boolean hasMore()
     {
@@ -109,6 +122,7 @@ public class ZFrame
 
     /**
      * Returns byte size of frame, if set, else 0
+     * 返回frame的byte 大小,如果没有则为0
      * @return
      *          Number of bytes in frame data, else 0
      */
@@ -124,6 +138,8 @@ public class ZFrame
 
     /**
      * Convenience method to ascertain if this frame contains some message data
+     * 
+     * 表明frame是否存在消息数据
      * @return
      *          True if frame contains data
      */
@@ -134,6 +150,8 @@ public class ZFrame
 
     /**
      * Internal method to call org.zeromq.Socket send() method.
+     * 
+     * 
      * @param socket
      *          0MQ socket to send on
      * @param flags
@@ -153,6 +171,8 @@ public class ZFrame
     /**
      * Sends frame to socket if it contains any data.
      * Frame contents are kept after the send.
+     * 
+     * 
      * @param socket
      *          0MQ socket to send frame
      * @param flags
@@ -182,6 +202,8 @@ public class ZFrame
     /**
      * Sends frame to socket if it contains data.
      * Use this method to send a frame and destroy the data after.
+     * 
+     * 消息发送后就销毁数据
      * @param socket
      *          0MQ socket to send frame
      * @param flags
@@ -214,6 +236,8 @@ public class ZFrame
 
     /**
      * Creates a new frame that duplicates an existing frame
+     * 创建一个新的frame,复制当前frame的数据
+     * 
      * @return
      *          Duplicate of frame; message contents copied into new byte array
      */
@@ -224,6 +248,8 @@ public class ZFrame
 
     /**
      * Returns true if both frames have byte - for byte identical data
+     * 
+     * 判断2个frame是否是相同的数据
      * @param other
      *          The other ZFrame to compare
      * @return
@@ -243,6 +269,7 @@ public class ZFrame
 
     /**
      * Sets new contents for frame
+     * 为frame重新设置数据
      * @param data
      *          New byte array contents for frame
      */
@@ -253,6 +280,7 @@ public class ZFrame
 
     /**
      * Sets new contents for frame
+     * 为frame重新设置数据
      * @param data
      *          New byte array contents for frame
      */
@@ -262,6 +290,7 @@ public class ZFrame
     }
 
     /**
+     * frame数据的16进制string
      * @return frame data as a printable hex string
      */
     public String strhex()
@@ -281,6 +310,7 @@ public class ZFrame
     /**
      * String equals.
      * Uses String compareTo for the comparison (lexigraphical)
+     * 
      * @param str
      *          String to compare with frame data
      * @return
@@ -315,6 +345,7 @@ public class ZFrame
 
     /**
      * Returns a human - readable representation of frame's data
+     * 返回一个易读的frame数据
      * @return
      *          A text string or hex-encoded string if data contains any non-printable ASCII characters
      */
@@ -342,6 +373,9 @@ public class ZFrame
     /**
      * Internal method to call recv on the socket.
      * Does not trap any ZMQExceptions but expects caling routine to handle them.
+     * 
+     * 内部方法通过socket recv数据
+     * 
      * @param socket
      *          0MQ socket to read from
      * @return
@@ -363,6 +397,8 @@ public class ZFrame
      * was interrupted. Does a blocking recv, if you want to not block then use
      * recvFrame(socket, ZMQ.DONTWAIT);
      *
+     * 获取一个单独的frame通过socket,返回获取的frame对象,或者null如果recv被中断
+     * 这是一block的recv,如果想不block使用recvFrame(socket, ZMQ.DONTWAIT)
      * @param   socket
      *              Socket to read from
      * @return
@@ -376,6 +412,8 @@ public class ZFrame
     /**
      * Receive a new frame off the socket, Returns newly-allocated frame, or
      * null if there was no input waiting, or if the read was interrupted.
+     * 
+     * 获取一个frame 通过socket,返回一个新分配的frame,或者null如果没有输入等待,或者read被中断
      * @param   socket
      *              Socket to read from
      * @param   flags

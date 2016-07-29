@@ -27,23 +27,40 @@ public class YPipe<T>
     //  Front of the queue points to the first prefetched item, back of
     //  the pipe points to last un-flushed item. Front is used only by
     //  reader thread, while back is used only by writer thread.
+    /**
+     * 分配有效的queue去存储pipe item
+     * queue的前端指向第一个预取的item,back指向最后为结束的item
+     * 前端只用于reader线程,而back只用于writer线程
+     */
     private final YQueue<T> queue;
 
     //  Points to the first un-flushed item. This variable is used
     //  exclusively by writer thread.
+    /**
+     * 指向第一个未结束的item,该参数只被writer线程使用
+     */
     private int w;
 
     //  Points to the first un-prefetched item. This variable is used
     //  exclusively by reader thread.
+    /**
+     * 指向第一个未预取的item,只被reader线程使用
+     */
     private int r;
 
     //  Points to the first item to be flushed in the future.
+    /**
+     * 指向第一个item,未来被flush的
+     */
     private int f;
 
     //  The single point of contention between writer and reader thread.
     //  Points past the last flushed item. If it is NULL,
     //  reader is asleep. This pointer should be always accessed using
     //  atomic operations.
+    /**
+     * 
+     */
     private final AtomicInteger c;
 
     public YPipe(int qsize)
@@ -60,9 +77,18 @@ public class YPipe<T>
     //  set to true the item is assumed to be continued by items
     //  subsequently written to the pipe. Incomplete items are never
     //  flushed down the stream.
+    /**
+     * 将item写入pipe,不刷新,如果设置为为结束,则下次会继续写入这个pipe,
+     * 
+     * @param value
+     * @param incomplete
+     *
+     * @author {yourname} 2016年7月28日 下午2:30:15
+     */
     public void write(final T value, boolean incomplete)
     {
         //  Place the value to the queue, add new terminator element.
+        // 将数据放入queue中,和一个新的终结元素
         queue.push(value);
 
         //  Move the "flush up to here" poiter.
@@ -73,6 +99,13 @@ public class YPipe<T>
 
     //  Pop an incomplete item from the pipe. Returns true is such
     //  item exists, false otherwise.
+    /**
+     * 取出一个未结束的item从pipe总,如果该元素存在就返回,
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 下午4:01:27
+     */
     public T unwrite()
     {
         if (f == queue.backPos()) {
@@ -85,9 +118,17 @@ public class YPipe<T>
     //  Flush all the completed items into the pipe. Returns false if
     //  the reader thread is sleeping. In that case, caller is obliged to
     //  wake the reader up before using the pipe again.
+    /**
+     * 刷新所有结束的item到pipe,如果reader线程sleeping就返回false
+     * 在这种情况下,调用者有义务去唤醒reader在下次使用pipe之前
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 下午4:02:16
+     */
     public boolean flush()
     {
         //  If there are no un-flushed items, do nothing.
+        //如果不存在未flush的item,什么都不做
         if (w == f) {
             return true;
         }
@@ -99,6 +140,11 @@ public class YPipe<T>
             //  care about thread-safeness and update c in non-atomic
             //  manner. We'll return false to let the caller know
             //  that reader is sleeping.
+            /**
+             * CAS 失败的原因是 c 是null,这意味着reader是asleep的,
+             * 这样我们不用关心线程不安全,在非原子操作下更新c
+             * 返回false让调用者知道reader在sleep
+             */
             c.set(f);
             w = f;
             return false;

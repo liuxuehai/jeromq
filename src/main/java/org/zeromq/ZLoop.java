@@ -31,6 +31,9 @@ import org.zeromq.ZMQ.Poller;
  * handles zmq.PollItem items (pollers or writers, sockets or fds), and
  * once-off or repeated timers. Its resolution is 1 msec. It uses a tickless
  * timer to reduce CPU interrupts in inactive processes.
+ *  ZLoop提供了一个事件驱动器模式
+ *  处理zmq.PollItem 的item(poller或者writer,socket) 一次性获取多次执行
+ *   用滴答的时钟去降低CPU的中断在不活动的进程中
  */
 
 public class ZLoop
@@ -45,7 +48,7 @@ public class ZLoop
         PollItem item;
         IZLoopHandler handler;
         Object arg;
-        int errors;                 //  If too many errors, kill poller
+        int errors;                 //  If too many errors, kill poller 如果错误太多,结束poller
 
         protected SPoller(PollItem item, IZLoopHandler handler, Object arg)
         {
@@ -63,7 +66,7 @@ public class ZLoop
         int times;
         IZLoopHandler handler;
         Object arg;
-        long when;               //  Clock time when alarm goes off
+        long when;               //  Clock time when alarm goes off 当警报响起时钟时间
 
         public STimer(int delay, int times, IZLoopHandler handler,
                       Object arg)
@@ -104,6 +107,12 @@ public class ZLoop
     //  register/cancel pollers orthogonally to executing the pollset
     //  activity on pollers. Returns 0 on success, -1 on failure.
 
+    /**
+     * 
+     * 我们保存着一组匹配pollset的poller  ,这就可以注册和取消poller 
+     *
+     * @author {yourname} 2016年7月26日 上午10:49:37
+     */
     private void rebuild()
     {
         pollact = null;
@@ -149,6 +158,16 @@ public class ZLoop
     //  If you register the pollitem more than once, each instance will invoke its
     //  corresponding handler.
 
+    /**
+     * 
+     * 注册pollitem,当他准备好是,
+     * @param pollItem
+     * @param handler
+     * @param arg
+     * @return
+     *
+     * @author {yourname} 2016年7月26日 上午10:55:06
+     */
     public int addPoller(PollItem pollItem, IZLoopHandler handler, Object arg)
     {
         if (pollItem.getRawSocket() == null && pollItem.getSocket() == null) {
@@ -251,7 +270,7 @@ public class ZLoop
         timers.addAll(newTimers);
         newTimers.clear();
 
-        //  Recalculate all timers now
+        //  Recalculate all timers now 重新计算时钟
         for (STimer timer : timers) {
             timer.when = timer.delay + System.currentTimeMillis();
         }
@@ -260,7 +279,7 @@ public class ZLoop
         while (!Thread.currentThread().isInterrupted()) {
             if (dirty) {
                 // If s_rebuild_pollset() fails, break out of the loop and
-                // return its error
+                // return its error 如果rebuild失败,break该loop并且返回错误
                 rebuild();
             }
             long wait = ticklessTimer();
@@ -274,7 +293,7 @@ public class ZLoop
                 rc = 0;
                 break;              //  Context has been shut down
             }
-            //  Handle any timers that have now expired
+            //  Handle any timers that have now expired 处理以及失效的时钟
             Iterator<STimer> it = timers.iterator();
             while (it.hasNext()) {
                 STimer timer = it.next();
@@ -295,10 +314,10 @@ public class ZLoop
                 }
             }
             if (rc == -1) {
-                break; // Some timer signalled break from the reactor loop
+                break; // Some timer signalled break from the reactor loop  部分timer返回break
             }
 
-            //  Handle any pollers that are ready
+            //  Handle any pollers that are ready 处理已经准备好的poller
             for (int itemNbr = 0; itemNbr < pollSize; itemNbr++) {
                 SPoller poller = pollact[itemNbr];
                 if (pollset.getItem(itemNbr).isError()) {
@@ -307,7 +326,7 @@ public class ZLoop
                                 poller.item.getSocket() != null ? poller.item.getSocket().getType() : "RAW",
                                 poller.item.getSocket(), poller.item.getRawSocket());
                     }
-                    //  Give handler one chance to handle error, then kill
+                    //  Give handler one chance to handle error, then kill   处理错误然后清除poller
                     //  poller because it'll disrupt the reactor otherwise.
                     if (poller.errors++ > 0) {
                         removePoller(poller.item);

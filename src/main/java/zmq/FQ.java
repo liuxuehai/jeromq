@@ -26,6 +26,12 @@ import java.util.List;
 //  Class manages a set of inbound pipes. On receive it performs fair
 //  queueing so that senders gone berserk won't cause denial of
 //  service for decent senders.
+/**
+ * 该类管理写入的pipe,这是一个公平的queue在接收数据上,
+ * 不会导致
+ * @since 1.0.0
+ * @version $Id$
+ */
 class FQ
 {
     //  Inbound pipes.
@@ -33,6 +39,7 @@ class FQ
 
     //  Number of active pipes. All the active pipes are located at the
     //  beginning of the pipes array.
+    // active的pipe数,
     private int active;
 
     //  Index of the next bound pipe to read a message from.
@@ -92,6 +99,7 @@ class FQ
         while (active > 0) {
             //  Try to fetch new message. If we've already read part of the message
             //  subsequent part should be immediately available.
+            // 尝试去获取一个新消息,如果我们已经读取的部分消息,那么剩余的部分应该立刻可用
             Msg msg = pipes.get(current).read();
             boolean fetched = msg != null;
 

@@ -29,22 +29,38 @@ public class Mailbox
         implements Closeable
 {
     //  The pipe to store actual commands.
+    /**
+     * 保存实际的command
+     */
     private final YPipe<Command> cpipe;
 
     //  Signaler to pass signals from writer thread to reader thread.
+    /**
+     * 发送信号从writer线程到reader线程
+     */
     private final Signaler signaler;
 
     //  There's only one thread receiving from the mailbox, but there
     //  is arbitrary number of threads sending. Given that ypipe requires
     //  synchronised access on both of its endpoints, we have to synchronise
     //  the sending side.
+    /**
+     *  只用一个线程从信箱里获取数据,但是有很多线程的发送,所以pipe需要同步控制
+     *  
+     */
     private final Lock sync;
 
     //  True if the underlying pipe is active, ie. when we are allowed to
     //  read commands from it.
+    /**
+     * 如果底层的pipe是active的那么为true,例如,当我们允许读取命令时
+     */
     private boolean active;
 
     // mailbox name, for better debugging
+    /**
+     * 信箱名称
+     */
     private final String name;
 
     public Mailbox(String name)
@@ -57,6 +73,7 @@ public class Mailbox
         //  polling on the associated file descriptor it will get woken up when
         //  new command is posted.
 
+        // 获取pipe的
         Command cmd = cpipe.read();
         assert (cmd == null);
         active = false;
@@ -97,6 +114,7 @@ public class Mailbox
             }
 
             //  If there are no more commands available, switch into passive state.
+            // 如果没有command,切换到被动状态
             active = false;
             signaler.recv();
         }

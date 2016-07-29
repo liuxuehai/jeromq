@@ -29,44 +29,50 @@ import org.zeromq.ZMQ.Socket;
 import zmq.ZError;
 
 /**
- * ZContext provides a high-level ZeroMQ context management class
+ * 
+ * ZContext 提供高等级的ZeroMQ上下文管理类
  *
- * It manages open sockets in the context and automatically closes these before terminating the context.
- * It provides a simple way to set the linger timeout on sockets, and configure contexts for number of I/O threads.
- * Sets-up signal (interrupt) handling for the process.
+ * 
+ * 它用于在上下文中管理开放式sockets,在终结上下文前关闭它
+ * 它提供了一种简单的方式设置sockets的超时,为I/O线程配置上下文
+ * 通过设置信号处理这些过程
  *
  */
 
 public class ZContext implements Closeable
 {
     /**
-     * Reference to underlying Context object
+     * 
+     * 参考下面的Context对象
      */
     private volatile Context context;
 
     /**
-     * List of sockets managed by this ZContext
+     * 
+     * ZContext管理的一些sockets
      */
     private List<Socket> sockets;
 
     /**
-     * Number of io threads allocated to this context, default 1
+     * 指派给context的io线程数,默认为1
+     * 
      */
     private int ioThreads;
 
     /**
-     * Linger timeout, default 0
+     * Linger 超时设置,默认为0
      */
     private int linger;
 
     /**
-     * HWM timeout, default 1
+     * HWM 超时设置,默认为1
      */
     private int hwm;
 
     /**
-     * Indicates if context object is owned by main thread
-     * (useful for multi-threaded applications)
+     *
+     * 指示上下文是否为main线程所有(多线程中有用)
+     * 
      */
     private boolean main;
 
@@ -87,7 +93,7 @@ public class ZContext implements Closeable
     }
 
     /**
-     * Destructor.  Call this to gracefully terminate context and close any managed 0MQ sockets
+     * 析构函数,通过这个优雅的终结上下文,同时关闭管理的sockets
      */
     public void destroy()
     {
@@ -101,7 +107,7 @@ public class ZContext implements Closeable
         }
         sockets.clear();
 
-        // Only terminate context if we are on the main thread
+        // 只有是main线程时,才终结上下文.
         if (isMain() && context != null) {
             context.term();
         }
@@ -110,8 +116,9 @@ public class ZContext implements Closeable
     }
 
     /**
-     * Creates a new managed socket within this ZContext instance.
-     * Use this to get automatic management of the socket at shutdown
+     * 
+     * 创建一个新的管理socket里面保存了context对象
+     * 同时将socket注册到ZContext中,用于关闭
      * @param type
      *          socket type (see ZMQ static class members)
      * @return
@@ -119,15 +126,15 @@ public class ZContext implements Closeable
      */
     public Socket createSocket(int type)
     {
-        // Create and register socket
+        // 创建和注册socket
         Socket socket = getContext().socket(type);
         sockets.add(socket);
         return socket;
     }
 
     /**
-     * Destroys managed socket within this context
-     * and remove from sockets list
+     * 
+     * 在上下文中销毁管理的socket,同时在list中移除
      * @param s
      *          org.zeromq.Socket object to destroy
      */
@@ -148,9 +155,10 @@ public class ZContext implements Closeable
     }
 
     /**
-     * Creates new shadow context.
-     * Shares same underlying org.zeromq.Context instance but has own list
-     * of managed sockets, io thread count etc.
+     * 
+     * 创建一个隐藏的context,共享相同的context对象,
+     * 但是它有自己管理的sockets和io线程等.
+     * 
      * @param ctx   Original ZContext to create shadow of
      * @return  New ZContext
      */

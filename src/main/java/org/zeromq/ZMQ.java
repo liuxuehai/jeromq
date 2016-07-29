@@ -244,8 +244,8 @@ public class ZMQ
     }
 
     /**
-     * Create a new Context.
-     *
+     * 创建一个新context
+     * 
      * @param ioThreads
      *            Number of threads to use, usually 1 is sufficient for most use cases.
      * @return the Context
@@ -323,8 +323,8 @@ public class ZMQ
         }
 
         /**
-         * Create a new Socket within this context.
-         *
+         * 
+         * 创建指定类型的socket
          * @param type
          *            the socket type.
          * @return the newly created Socket.
@@ -369,6 +369,7 @@ public class ZMQ
     {
         //  This port range is defined by IANA for dynamic or private ports
         //  We use this when choosing a port for dynamic binding.
+        // 动态绑定时,port的范围
         private static final int DYNFROM = 0xc000;
         private static final int DYNTO = 0xffff;
 
@@ -1349,7 +1350,7 @@ public class ZMQ
 
         /**
          * Receive a message.
-         *
+         * 获取一个消息
          * @param flags
          *            the flags to apply to the receive operation.
          * @return the message received, as an array of bytes; null on error.
@@ -1367,8 +1368,8 @@ public class ZMQ
         }
 
         /**
-         * Receive a message in to a specified buffer.
-         *
+         * 
+         * 接收一个消息指定到ByteBuffer
          * @param buffer
          *            byte[] to copy zmq message payload in to.
          * @param offset
@@ -1393,7 +1394,8 @@ public class ZMQ
         }
 
         /**
-         * Receive a message into the specified ByteBuffer
+         * 
+         * 接收一个消息指定到ByteBuffer
          *
          * @param buffer the buffer to copy the zmq message payload into
          * @param flags the flags to apply to the receive operation

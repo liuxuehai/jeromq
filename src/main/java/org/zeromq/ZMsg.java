@@ -234,6 +234,8 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     /**
      * Receives message from socket, returns ZMsg object or null if the
      * recv was interrupted. Setting the flag to ZMQ.DONTWAIT does a non-blocking recv.
+     * 获取消息通过socket,返回ZMsg对象或者null如果recv被中断
+     * 如果标记为ZMQ.DONTWAIT,将为非blocking recv
      * @param   socket
      * @param   flag see ZMQ constants
      * @return
@@ -250,7 +252,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         while (true) {
             ZFrame f = ZFrame.recvFrame(socket, flag);
             if (f == null) {
-                // If receive failed or was interrupted
+                // If receive failed or was interrupted  如果获取消息是吧或是被中断
                 msg.destroy();
                 msg = null;
                 break;

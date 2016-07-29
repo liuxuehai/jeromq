@@ -10,10 +10,17 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 // This is to avoid people trying to initialize a Context
+/**
+ * 该类为避免用户试图初始化一个context
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 class ManagedContext
 {
     static {
         // Release ManagedSocket resources when catching SIGINT
+        // 释放managedSocket资源当捕获SIGINT
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run()
@@ -71,6 +78,7 @@ class ManagedContext
 
     /*
      * This should only be called when SIGINT is received
+     * 该方法执行为接收到SIGINT消息
      */
     private void close()
     {
@@ -92,6 +100,7 @@ class ManagedContext
     }
 
     // Lazy singleton pattern to avoid double lock checking
+    // lazy单例模式避免双重检查锁定
     private static class ContextHolder
     {
         private static final ManagedContext INSTANCE = new ManagedContext();

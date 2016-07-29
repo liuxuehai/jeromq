@@ -32,6 +32,7 @@ class Pull extends SocketBase
     }
 
     //  Fair queueing object for inbound pipes.
+    // 公平队列对象传入管道。
     private final FQ fq;
 
     public Pull(Ctx parent, int tid, int sid)

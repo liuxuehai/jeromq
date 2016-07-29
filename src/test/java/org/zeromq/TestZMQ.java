@@ -49,7 +49,9 @@ public class TestZMQ
         {
             System.out.println("Start client thread ");
             s.connect("tcp://127.0.0.1:6669");
-            s.recv(0);
+            byte[] ss= s.recv(0);
+            
+            System.out.println(new String(ss));
 
             s.close();
             System.out.println("Stop client thread ");
@@ -60,7 +62,7 @@ public class TestZMQ
     public void testPollerPollout() throws Exception
     {
         ZMQ.Context context = ZMQ.context(1);
-        Client client = new Client(context);
+        Client client = new Client(context); 
 
         //  Socket to send messages to
         ZMQ.Socket sender = context.socket(ZMQ.PUSH);
@@ -74,7 +76,7 @@ public class TestZMQ
             outItems.poll(1000);
             if (outItems.pollout(0)) {
                 sender.send("OK", 0);
-                System.out.println("ok");
+                //System.out.println("ok");
                 break;
             }
             else {

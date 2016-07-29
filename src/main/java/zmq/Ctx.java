@@ -35,13 +35,23 @@ import java.util.concurrent.locks.ReentrantLock;
 
 //Context object encapsulates all the global state associated with
 //  the library.
-
+/**
+ * 
+ * 上下文对象包括了所有的全局状态与库关联
+ * @since 1.0.0
+ * @version $Id$
+ */
 public class Ctx
 {
     //  Information associated with inproc endpoint. Note that endpoint options
     //  are registered as well so that the peer can access them without a need
     //  for synchronisation, handshaking or similar.
-
+    /**
+     *  inproc endpoint 相关信息,endpoint属性也注册,这样peer能访问不需要同步,握手,或其他
+     * 
+     * @since 1.0.0
+     * @version $Id$
+     */
     static class Endpoint
     {
         public final SocketBase socket;
@@ -280,6 +290,7 @@ public class Ctx
             if (starting.compareAndSet(true, false)) {
                 //  Initialize the array of mailboxes. Additional three slots are for
                 //  zmq_term thread and reaper thread.
+                //  初始化信箱数组,其中2个信箱给zmq_term线程和reaper线程
                 int mazmq;
                 int ios;
                 optSync.lock();

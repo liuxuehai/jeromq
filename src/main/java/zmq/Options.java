@@ -27,87 +27,106 @@ import zmq.TcpAddress.TcpAddressMask;
 
 public class Options
 {
-    //  High-water marks for message pipes.
+    //  High-water marks for message pipes.  消息管道的上限
     int sendHwm;
     int recvHwm;
 
-    //  I/O thread affinity.
+    //  I/O thread affinity. i/o线程的亲和度
     long affinity;
 
-    //  Socket identity
+    //  Socket identity 线程的标记
     byte identitySize;
     byte[] identity; // [256];
 
-    // Last socket endpoint resolved URI
+    // Last socket endpoint resolved URI  解析的uri最近的socket endpoint
     String lastEndpoint;
 
-    //  Maximum tranfer rate [kb/s]. Default 100kb/s.
+    //  Maximum tranfer rate [kb/s]. Default 100kb/s.  最大传输速率
     int rate;
 
-    //  Reliability time interval [ms]. Default 10 seconds.
+    //  Reliability time interval [ms]. Default 10 seconds.  可靠性时间间隔
     int recoveryIvl;
 
-    // Sets the time-to-live field in every multicast packet sent.
+    // Sets the time-to-live field in every multicast packet sent. 在每一个广播包发送设置的存活时间
     int multicastHops;
 
-    // SO_SNDBUF and SO_RCVBUF to be passed to underlying transport sockets.
+    // SO_SNDBUF and SO_RCVBUF to be passed to underlying transport sockets.  底层传输socket时,传输的数据
     int sndbuf;
     int rcvbuf;
 
-    //  Socket type.
+    //  Socket type. socket类型
     int type;
 
-    //  Linger time, in milliseconds.
+    //  Linger time, in milliseconds.   延迟时间 
     int linger;
 
     //  Minimum interval between attempts to reconnect, in milliseconds.
-    //  Default 100ms
+    //  Default 100ms   再次尝试连接的最小时间
     int reconnectIvl;
     //  Maximum interval between attempts to reconnect, in milliseconds.
-    //  Default 0 (unused)
+    //  Default 0 (unused)  再次尝试连接的最大时间
     int reconnectIvlMax;
 
-    //  Maximum backlog for pending connections.
+    //  Maximum backlog for pending connections.   最大的等待连接数
     int backlog;
 
-    //  Maximal size of message to handle.
+    //  Maximal size of message to handle.   最大的消息处理数
     long maxMsgSize;
 
-    // The timeout for send/recv operations for this socket.
+    // The timeout for send/recv operations for this socket.  socket的发送和接收超时时间
     int recvTimeout;
     int sendTimeout;
 
     //  If 1, indicates the use of IPv4 sockets only, it will not be
     //  possible to communicate with IPv6-only hosts. If 0, the socket can
-    //  connect to and accept connections from both IPv4 and IPv6 hosts.
+    //  connect to and accept connections from both IPv4 and IPv6 hosts.  
+    /**
+     * 如果为1,表明只用IPv4,不会用IPv6
+     * 如果为0,表明可能是IPv4,可能是IPv6
+     */
     int ipv4only;
 
     //  If 1, connecting pipes are not attached immediately, meaning a send()
     //  on a socket with only connecting pipes would block
+    /**
+     * 如果为1,连接pipe不会立刻attach,意味着只有连接pipe的socket send会block
+     */
     int delayAttachOnConnect;
 
     //  If true, session reads all the pending messages from the pipe and
     //  sends them to the network when socket is closed.
+    /**
+     * 如果为true,session读取所有的pending消息和发送的消息,当socket关闭的时候
+     */
     boolean delayOnClose;
 
     //  If true, socket reads all the messages from the pipe and delivers
     //  them to the user when the peer terminates.
+    /**
+     * 如果为true,socket读取所有的消息和分发给用户,当peer关闭时
+     */
     boolean delayOnDisconnect;
 
     //  If 1, (X)SUB socket should filter the messages. If 0, it should not.
+    /**
+     * 如果为1,sub socket会过滤消息,如果为0,则不会
+     */
     boolean filter;
 
     //  If true, the identity message is forwarded to the socket.
+    /**
+     * 如果为true,socket会存在标记消息
+     */
     boolean recvIdentity;
 
-    //  TCP keep-alive settings.
+    //  TCP keep-alive settings. tcp保活设置
     //  Defaults to -1 = do not change socket options
     int tcpKeepAlive;
     int tcpKeepAliveCnt;
     int tcpKeepAliveIdle;
     int tcpKeepAliveIntvl;
 
-    // TCP accept() filters
+    // TCP accept() filters  tcp 过滤
     //typedef std::vector <tcp_address_mask_t> tcp_accept_filters_t;
     final List<TcpAddress.TcpAddressMask> tcpAcceptFilters;
 

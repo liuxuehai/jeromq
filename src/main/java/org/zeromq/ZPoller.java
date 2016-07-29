@@ -18,9 +18,9 @@ import org.zeromq.ZMQ.Socket;
  * Rewritten poller for 0MQ.
  *
  * Polls selectable channels and sockets for specified events.
- *
+ * poll 通道和socket
  * This poller can be used in two ways:
- *
+ * 
  * <p>
  * - the traditional one, where you make something like
  * <pre>
@@ -77,7 +77,7 @@ public class ZPoller implements Closeable
     {
         /**
          * Called when the poller intercepts events.
-         *
+         * poller 拦截事件时调用
          * @param socket    the socket with events
          * @param events    the interesting events as an ORed combination of IN, OUT, ERR
          * @return <b>true to continue the polling</b>, false to stop it
@@ -86,7 +86,7 @@ public class ZPoller implements Closeable
 
         /**
          * Called when the poller intercepts events.
-         *
+         * poller 拦截事件时调用
          * @param channel   the channel with events
          * @param events    the interesting events as an ORed combination of IN, OUT, ERR
          * @return <b>true to continue the polling</b>, false to stop it
@@ -97,13 +97,34 @@ public class ZPoller implements Closeable
     // contract for items. Useful for providing own implementation.
     public static interface ItemHolder
     {
-        // the inner ZMQ poll item
+        // the inner ZMQ poll item  
+        /**
+         * ZMQ 内部poll item
+         * 
+         * @return
+         *
+         * @author {yourname} 2016年7月28日 上午9:26:55
+         */
         zmq.PollItem item();
 
-        // the related ZeroMQ socket
+        // the related ZeroMQ socket 
+        /**
+         * ZMQ 关联的socket
+         * 
+         * @return
+         *
+         * @author {yourname} 2016年7月28日 上午9:27:03
+         */
         Socket socket();
 
         // the associated events handler
+        /**
+         * 
+         * 事件处理器
+         * @return
+         *
+         * @author {yourname} 2016年7月28日 上午9:27:22
+         */
         EventsHandler handler();
     }
 
@@ -112,7 +133,7 @@ public class ZPoller implements Closeable
     {
         /**
          * Creates a new holder for a poll item.
-         *
+         * 为poll item 创建一个新holder
          * @param socket    the socket to poll
          * @param handler   the optional handler for polled events
          * @param events    the interested events
@@ -122,7 +143,7 @@ public class ZPoller implements Closeable
 
         /**
          * Creates a new holder for a poll item.
-         *
+         * 为poll item 创建一个新holder
          * @param channel   the channel to poll
          * @param handler   the optional handler for polled events.
          * @param events    the interested events
@@ -246,7 +267,7 @@ public class ZPoller implements Closeable
      * Creates a new poller based on the current one.
      * This will be a shadow poller, sharing the same selector and items creator.
      * The global events handler will not be shared.
-     *
+     * 根据氮气poller创建一个新poller ,共享相同的selector和item  
      * @param poller    the main poller.
      */
     public ZPoller(final ZPoller poller)
@@ -292,6 +313,16 @@ public class ZPoller implements Closeable
     }
 
     // creates a new poll item
+    /**
+     * 创建一个新的poll item
+     * 
+     * @param socket
+     * @param handler
+     * @param events
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 上午9:33:35
+     */
     protected ItemHolder create(final Socket socket, final EventsHandler handler, final int events)
     {
         assert (socket != null);
@@ -299,6 +330,16 @@ public class ZPoller implements Closeable
     }
 
     // creates a new poll item
+    /**
+     * 创建一个新的poll item
+     * 
+     * @param channel
+     * @param handler
+     * @param events
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 上午9:33:50
+     */
     protected ItemHolder create(final SelectableChannel channel, final EventsHandler handler, final int events)
     {
         assert (channel != null);
@@ -327,7 +368,7 @@ public class ZPoller implements Closeable
 
     /**
      * Register a Socket for polling on specified events.
-     *
+     * 为poller注册一个socket在特定事件上
      * @param socket   the registering socket.
      * @param handler  the events handler for this socket
      * @param events   the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
@@ -354,7 +395,7 @@ public class ZPoller implements Closeable
 
     /**
      * Register a SelectableChannel for polling on specified events.
-     *
+     * 为poller注册一个SelectableChannel在特定事件上
      * @param channel   the registering channel.
      * @param handler   the events handler for this socket
      * @param events    the events to listen to, as a mask composed by XORing POLLIN, POLLOUT and POLLERR.
@@ -437,7 +478,7 @@ public class ZPoller implements Closeable
 
     /**
      * Issue a poll call, using the specified timeout value.
-     *
+     * 发起一个poll 调用,用特定的超时
      * @param timeout           the timeout, as per zmq_poll ();
      * @param dispatchEvents    true to dispatch events using items handler and the global one.
      * @see "http://api.zeromq.org/3-0:zmq-poll"
@@ -446,22 +487,22 @@ public class ZPoller implements Closeable
      */
     protected int poll(final long timeout, final boolean dispatchEvents)
     {
-        // get all the raw items
+        // get all the raw items 获取所有的原始item
         final Collection<ItemHolder> all = items();
         final Set<zmq.PollItem> pollItems = new HashSet<zmq.PollItem>(all.size());
         for (ItemHolder holder : all) {
             pollItems.add(holder.item());
         }
-        // polling time
+        // polling time  
         final int rc = poll(selector, timeout, pollItems);
 
         if (!dispatchEvents) {
-            // raw result
+            // raw result 原始结果
             return rc;
         }
 
         if (dispatch(all, pollItems.size())) {
-            // returns event counts after dispatch if everything went fine
+            // returns event counts after dispatch if everything went fine  如果在dispatch执行后,一切顺利,反馈原始结果,
             return rc;
         }
         // error in dispatching
@@ -469,6 +510,16 @@ public class ZPoller implements Closeable
     }
 
     // does the effective polling
+    /**
+     * 实际poll
+     * 
+     * @param selector
+     * @param tout
+     * @param items
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 上午9:41:22
+     */
     protected int poll(final Selector selector, final long tout,
             final Collection<zmq.PollItem> items)
     {
@@ -554,7 +605,7 @@ public class ZPoller implements Closeable
 
     /**
      * Tells if a socket is readable from this poller.
-     *
+     * socket是否可读
      * @param socket    the socket to ask for.
      * @return true if readable, otherwise false
      */
@@ -569,6 +620,14 @@ public class ZPoller implements Closeable
     }
 
     // checks for read event
+    /**
+     * 检查read事件
+     * 
+     * @param socketOrChannel
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 上午9:45:04
+     */
     public boolean readable(final Object socketOrChannel)
     {
         final zmq.PollItem it = filter(socketOrChannel, IN);
@@ -772,6 +831,15 @@ public class ZPoller implements Closeable
     }
 
     // filters items to get the first one matching the criteria, or null if none found
+    /**
+     * 过滤item获取第一个适合的poll item,没有发现则反馈null
+     * 
+     * @param socketOrChannel
+     * @param events
+     * @return
+     *
+     * @author {yourname} 2016年7月28日 上午9:45:40
+     */
     protected zmq.PollItem filter(final Object socketOrChannel, int events)
     {
         if (socketOrChannel == null) {
