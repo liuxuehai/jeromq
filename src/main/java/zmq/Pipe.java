@@ -22,6 +22,15 @@ package zmq;
 //  Note that pipe can be stored in three different arrays.
 //  The array of inbound pipes (1), the array of outbound pipes (2) and
 //  the generic array of pipes to deallocate (3).
+/**
+ * pipe可能存在于3个不通的数组类
+ * 在inbound pipe数组
+ * 在outbound pipe数组
+ * 在释放的pipe数组
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 class Pipe extends ZObject
 {
     interface IPipeEvents
@@ -32,32 +41,32 @@ class Pipe extends ZObject
         void pipeTerminated(Pipe pipe);
     }
 
-    //  Underlying pipes for both directions.
+    //  Underlying pipes for both directions.  底层pipe在2个方向
     private YPipe<Msg> inpipe;
     private YPipe<Msg> outpipe;
 
-    //  Can the pipe be read from / written to?
+    //  Can the pipe be read from / written to?  pipe在读和写是否激活
     private boolean inActive;
     private boolean outActive;
 
-    //  High watermark for the outbound pipe.
+    //  High watermark for the outbound pipe.   高水位对应outbound  pipe
     private int hwm;
 
-    //  Low watermark for the inbound pipe.
+    //  Low watermark for the inbound pipe.    低水位对应 inbound pipe
     private int lwm;
 
-    //  Number of messages read and written so far.
+    //  Number of messages read and written so far.   当前为至写入和读取的消息数
     private long msgsRead;
     private long msgsWritten;
 
     //  Last received peer's msgsRead. The actual number in the peer
-    //  can be higher at the moment.
+    //  can be higher at the moment.  最近收到的peer的消息读,实际数字可能会相对高一点
     private long peersMsgsRead;
 
-    //  The pipe object on the other side of the pipepair.
+    //  The pipe object on the other side of the pipepair.  管道对象在piper对的其他
     private Pipe peer;
 
-    //  Sink to send events to.
+    //  Sink to send events to.   事件
     private IPipeEvents sink;
 
     //  State of the pipe endpoint. Active is common state before any
@@ -69,6 +78,19 @@ class Pipe extends ZObject
     //  the peer. Terminated means that 'terminate' was explicitly called
     //  by the user. Double_terminated means that user called 'terminate'
     //  and then we've got term command from the peer as well.
+    
+    /**
+     * pipe endpoint的状态,
+     * active 是常见的状态在其他状态开始前,
+     * delimit 意味着delimiter是从管之前收到term命令
+     * Pending 意味着term命令已经接收到了从pipe,但是然后还有pending的消息需要读取
+     * Terminating  意味着所有pending消息都已经接收了,等待ack
+     * Terminated  意味着 terminate 明确的收到从用户
+     * Double_terminated  意味着 用户调用 terminate 并且我们也获取到term命令从peer
+     * 
+     * @since 1.0.0
+     * @version $Id$
+     */
     enum State {
         ACTIVE,
         DELIMITED,
@@ -82,16 +104,28 @@ class Pipe extends ZObject
     //  If true, we receive all the pending inbound messages before
     //  terminating. If false, we terminate immediately when the peer
     //  asks us to.
+    /**
+     * 如果是true 我们获取到所有pending inbound消息在terminating 之前
+     */
     private boolean delay;
 
-    //  Identity of the writer. Used uniquely by the reader side.
+    //  Identity of the writer. Used uniquely by the reader side.  writer的标记,reader端用唯一标记
     private Blob identity;
 
-    // JeroMQ only
+    // JeroMQ only   
     private ZObject parent;
 
     //  Constructor is private. Pipe can only be created using
-    //  pipepair function.
+    //  pipepair function.   
+    /**
+     * pipe只能通过pipepair 方法创建
+     * @param parent
+     * @param inpipe
+     * @param outpipe
+     * @param inhwm
+     * @param outhwm
+     * @param delay
+     */
     private Pipe(ZObject parent, YPipe<Msg> inpipe, YPipe<Msg> outpipe,
               int inhwm, int outhwm, boolean delay)
     {
@@ -119,12 +153,28 @@ class Pipe extends ZObject
     //  Delay specifies how the pipe behaves when the peer terminates. If true
     //  pipe receives all the pending messages before terminating, otherwise it
     //  terminates straight away.
+    /**
+     * 创建一个pipepare 对一个双向传输的消息
+     * 第一个HWM是消息从第一个pipe传向第2个pipe
+     * 第2个HWM是消息从第2个pipe传向第1个pipe
+     * 延迟指定 pipe的行为当peer终结时
+     * 如果是true pipe获取所以pending消息在terminating之前,如果为false则直接terminates
+     * @param parents
+     * @param pipes
+     * @param hwms
+     * @param delays
+     *
+     * @author {yourname} 2016年8月8日 下午4:19:57
+     */
     public static void pipepair(ZObject[] parents, Pipe[] pipes, int[] hwms,
             boolean[] delays)
     {
         //   Creates two pipe objects. These objects are connected by two ypipes,
         //   each to pass messages in one direction.
 
+        /**
+         * 创建2个pipe对象,这些对象连接到2个ypipe对象,每一个传输消息在一个方向上
+         */
         YPipe<Msg> upipe1 = new YPipe<Msg>(Config.MESSAGE_PIPE_GRANULARITY.getValue());
         YPipe<Msg> upipe2 = new YPipe<Msg>(Config.MESSAGE_PIPE_GRANULARITY.getValue());
 
@@ -140,14 +190,28 @@ class Pipe extends ZObject
 
     //  Pipepair uses this function to let us know about
     //  the peer pipe object.
+    /**
+     * pipepair 用这个方法让我们只想peer pipe对象
+     * 
+     * @param peer
+     *
+     * @author {yourname} 2016年8月8日 下午4:27:03
+     */
     private void setPeer(Pipe peer)
     {
-        //  Peer can be set once only.
+        //  Peer can be set once only.  peer只能设置一次
         assert (peer != null);
         this.peer = peer;
     }
 
     //  Specifies the object to send events to.
+    /**
+     * 指定对象发送的事件对象
+     * 
+     * @param sink
+     *
+     * @author {yourname} 2016年8月8日 下午4:55:57
+     */
     public void setEventSink(IPipeEvents sink)
     {
         assert (this.sink == null);
@@ -155,6 +219,13 @@ class Pipe extends ZObject
     }
 
     //  Pipe endpoint can store an opaque ID to be used by its clients.
+    /**
+     * pipe endpoint 能保存一个不透明的id 被客户端使用
+     * 
+     * @param identity
+     *
+     * @author {yourname} 2016年8月8日 下午4:56:44
+     */
     public void setIdentity(Blob identity)
     {
         this.identity = identity;
@@ -166,20 +237,27 @@ class Pipe extends ZObject
     }
 
     //  Returns true if there is at least one message to read in the pipe.
+    /**
+     * 返回true,如果在pipe上至少还有一个消息可以读取
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午4:57:30
+     */
     public boolean checkRead()
     {
         if (!inActive || (state != State.ACTIVE && state != State.PENDING)) {
             return false;
         }
 
-        //  Check if there's an item in the pipe.
+        //  Check if there's an item in the pipe.   检查是否还有一个item在pipe中
         if (!inpipe.checkRead()) {
             inActive = false;
             return false;
         }
 
         //  If the next item in the pipe is message delimiter,
-        //  initiate termination process.
+        //  initiate termination process.  如果下一个消息在pipe中是delimiter  则返回false,并处理termination
         if (isDelimiter(inpipe.probe())) {
             Msg msg = inpipe.read();
             assert (msg != null);
@@ -191,6 +269,13 @@ class Pipe extends ZObject
     }
 
     //  Reads a message to the underlying pipe.
+    /**
+     * 获取消息从底层的pipe
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午5:12:18
+     */
     public Msg read()
     {
         if (!inActive || (state != State.ACTIVE && state != State.PENDING)) {
@@ -205,6 +290,7 @@ class Pipe extends ZObject
         }
 
         //  If delimiter was read, start termination process of the pipe.
+        // 如果delimiter被读取,启动delimiter处理
         if (msg.isDelimiter()) {
             delimit();
             return null;
@@ -223,6 +309,13 @@ class Pipe extends ZObject
 
     //  Checks whether messages can be written to the pipe. If writing
     //  the message would cause high watermark the function returns false.
+    /**
+     * 检查消息释放能写入pipe,r如果写入可能导致高水位,返回false
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午5:11:24
+     */
     public boolean checkWrite()
     {
         if (!outActive || state != State.ACTIVE) {
@@ -241,6 +334,14 @@ class Pipe extends ZObject
 
     //  Writes a message to the underlying pipe. Returns false if the
     //  message cannot be written because high watermark was reached.
+    /**
+     * 将一个消息写入到底层pipe,返回false如果这个消息不能写入因为高水位已经达到
+     * 
+     * @param msg
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午5:09:52
+     */
     public boolean write(Msg msg)
     {
         if (!checkWrite()) {
@@ -523,22 +624,31 @@ class Pipe extends ZObject
     //  Temporaraily disconnects the inbound message stream and drops
     //  all the messages on the fly. Causes 'hiccuped' event to be generated
     //  in the peer.
+    /**
+     * 临时关闭连接inbound消息流,并且丢掉所有在执行中的消息,
+     * hiccuped 时间的原因是在peer中生成
+     *
+     * @author {yourname} 2016年8月8日 下午5:01:46
+     */
     public void hiccup()
     {
-        //  If termination is already under way do nothing.
+        //  If termination is already under way do nothing.  如果termination已经在执行不处理
         if (state != State.ACTIVE) {
             return;
         }
 
         //  We'll drop the pointer to the inpipe. From now on, the peer is
         //  responsible for deallocating it.
+        /**
+         * 我们会drop所有指向inpipe的指向,从现在开始,peer释放责任
+         */
         inpipe = null;
 
-        //  Create new inpipe.
+        //  Create new inpipe.  创建一个新的inpipe
         inpipe = new YPipe<Msg>(Config.MESSAGE_PIPE_GRANULARITY.getValue());
         inActive = true;
 
-        //  Notify the peer about the hiccup.
+        //  Notify the peer about the hiccup.  通知peer hiccup
         sendHiccup(peer, inpipe);
     }
 

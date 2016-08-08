@@ -20,22 +20,41 @@
 package zmq;
 
 //  This structure defines the commands that can be sent between threads.
+/**
+ * 定义在线程间可以发送的command
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 class Command
 {
-    //  Object to process the command.
+    //  Object to process the command.   处理命令的对象
     private final ZObject destination;
-    private final Type type;
+    private final Type type;  //命令的类型
 
     public enum Type {
         //  Sent to I/O thread to let it know that it should
-        //  terminate itself.
+        //  terminate itself.  
+        /**
+         * 发送给i/o线程让它terminate字节
+         */
         STOP,
         //  Sent to I/O object to make it register with its I/O thread
+        /**
+         * 发送给i/o对象,让它注册到i/o线程
+         */
         PLUG,
         //  Sent to socket to let it know about the newly created object.
+        /*
+         * 发送给socket让它直接最近创建的对象
+         */
         OWN,
         //  Attach the engine to the session. If engine is NULL, it informs
         //  session that the connection have failed.
+        /**
+         * attach 该engine给session
+         * 如果engine为null,则通知session连接失败了
+         */
         ATTACH,
         //  Sent from session to socket to establish pipe(s) between them.
         //  Caller have used inc_seqnum beforehand sending the command.

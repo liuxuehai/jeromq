@@ -119,13 +119,13 @@ public class Mailbox
             signaler.recv();
         }
 
-        //  Wait for signal from the command sender.
+        //  Wait for signal from the command sender.   等待从命令sender 的信号
         boolean rc = signaler.waitEvent(timeout);
         if (!rc) {
             return null;
         }
 
-        //  We've got the signal. Now we can switch into active state.
+        //  We've got the signal. Now we can switch into active state.   获取到信号,就将状态切换到激活状态
         active = true;
 
         //  Get a command.

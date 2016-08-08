@@ -91,6 +91,14 @@ public class YQueue<T>
 
     //  Returns reference to the front element of the queue.
     //  If the queue is empty, behaviour is undefined.
+    /**
+     * 返回queue前面的数据引用
+     * 如果queue是空,没有处理
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午5:14:28
+     */
     public T front()
     {
         return beginChunk.values[beginPos];
@@ -103,6 +111,13 @@ public class YQueue<T>
 
     //  Returns reference to the back element of the queue.
     //  If the queue is empty, behaviour is undefined.
+    /**
+     * 返回queue后面的数据引用
+     * 如果queue是空,没有处理
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午5:15:55
+     */
     public T back()
     {
         return backChunk.values[backPos];
@@ -162,9 +177,17 @@ public class YQueue<T>
     //  unpush is called. It cannot be done automatically as the read
     //  side of the queue can be managed by different, completely
     //  unsynchronised thread.
+    /**
+     * 移除元素从queue的后面,另一种说法是,回滚最近push进queue的元素
+     * 调用者负责销毁没有被unpush的对象
+     * 调用者也要保证当unpush调用时,队列不能为空,
+     * 不能自动处理在read端,
+     *
+     * @author {yourname} 2016年8月8日 下午5:17:08
+     */
     public void unpush()
     {
-        //  First, move 'back' one position backwards.
+        //  First, move 'back' one position backwards.  
         if (backPos > 0) {
             backPos--;
         }
@@ -176,7 +199,10 @@ public class YQueue<T>
         //  Now, move 'end' position backwards. Note that obsolete end chunk
         //  is not used as a spare chunk. The analysis shows that doing so
         //  would require free and atomic operation per chunk deallocated
-        //  instead of a simple free.
+        //  instead of a simple free.  
+        /**
+         * 移动end位置向前,
+         */
         if (endPos > 0) {
             endPos--;
         }

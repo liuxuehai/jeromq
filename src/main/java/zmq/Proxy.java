@@ -33,6 +33,8 @@ public class Proxy
     {
         //  The algorithm below assumes ratio of requests and replies processed
         //  under full load to be 1:1.
+        
+        // 下面的算法指明请求和反馈在满负荷下为1:1
 
         //  TODO: The current implementation drops messages when
         //  any of the pipes becomes full.

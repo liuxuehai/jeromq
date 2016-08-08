@@ -109,23 +109,32 @@ abstract class Own extends ZObject
 
     protected void processSeqnum()
     {
-        //  Catch up with counter of processed commands.
+        //  Catch up with counter of processed commands.   记录处理的命令数
         processedSeqnum++;
 
-        //  We may have catched up and still have pending terms acks.
+        //  We may have catched up and still have pending terms acks.  
         checkTermAcks();
     }
 
     //  Launch the supplied object and become its owner.
+    /**
+     * 根据给定参数启动该对象,并且成为他的owner
+     * 
+     * @param object
+     *
+     * @author {yourname} 2016年8月1日 上午9:54:41
+     */
     protected void launchChild(Own object)
     {
-        //  Specify the owner of the object.
+        //  Specify the owner of the object.  指定对象的owner
         object.setOwner(this);
 
         //  Plug the object into the I/O thread.
+        // plug 这个对象到i/o线程
         sendPlug(object);
 
-        //  Take ownership of the object.
+        //  Take ownership of the object. 获取该对象的所有权
+        
         sendOwn(this, object);
     }
 
@@ -253,11 +262,13 @@ abstract class Own extends ZObject
     {
         if (terminating && processedSeqnum == sendSeqnum.get() &&
               termAcks == 0) {
-            //  Sanity check. There should be no active children at this point.
+            //  Sanity check. There should be no active children at this point.  
+            // 完整性检查,应该没有active的子对象在这个节点
             assert (owned.isEmpty());
 
             //  The root object has nobody to confirm the termination to.
             //  Other nodes will confirm the termination to the owner.
+            //  root对象没有其他对象去确认终结,其他节点会确认终结该owner
             if (owner != null) {
                 sendTermAck(owner);
             }

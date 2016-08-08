@@ -30,11 +30,17 @@ class Dist
     private final List<Pipe> pipes;
 
     //  Number of all the pipes to send the next message to.
+    /**
+     * 发送下一个消息给pipe的数量
+     */
     private int matching;
 
     //  Number of active pipes. All the active pipes are located at the
     //  beginning of the pipes array. These are the pipes the messages
     //  can be sent to at the moment.
+    /**
+     * active的pipe数,所有active的pipe都在pipe数组的开始,这是在这个时间上,有这么多pipe可以发送消息
+     */
     private int active;
 
     //  Number of pipes eligible for sending messages to. This includes all
@@ -42,6 +48,10 @@ class Dist
     //  messages to (the HWM is not yet reached), but sending a message
     //  to them would result in partial message being delivered, ie. message
     //  with initial parts missing.
+    /**
+     * 有资格发送消息的pipe数,包括所有active的pipe,加上在理论上可以发送消息的pipe
+     * 但是发送消息给他们,结果是可能只有部分消息会被交付
+     */
     private int eligible;
 
     //  True if last we are in the middle of a multipart message.
@@ -57,11 +67,22 @@ class Dist
     }
 
     //  Adds the pipe to the distributor object.
+    /**
+     * 添加pipe到分配的对象
+     * 
+     * @param pipe
+     *
+     * @author {yourname} 2016年8月8日 下午1:47:26
+     */
     public void attach(Pipe pipe)
     {
         //  If we are in the middle of sending a message, we'll add new pipe
         //  into the list of eligible pipes. Otherwise we add it to the list
         //  of active pipes.
+        /**
+         * 如果是在一个消息的中间,我们就新增一个pipe到理论上的pipe list上,
+         * 否则我们将它加入到active的pipe中.
+         */
         if (more) {
             pipes.add(pipe);
             //pipes.swap (eligible, pipes.size() - 1);
@@ -79,31 +100,47 @@ class Dist
 
     //  Mark the pipe as matching. Subsequent call to sendToMatching
     //  will send message also to this pipe.
+    /*
+     * 标记pipe是匹配的,
+     */
     public void match(Pipe pipe)
     {
         int idx = pipes.indexOf(pipe);
-        //  If pipe is already matching do nothing.
+        //  If pipe is already matching do nothing.  如果pipe已经匹配,什么也不做
         if (idx < matching) {
             return;
         }
 
-        //  If the pipe isn't eligible, ignore it.
+        //  If the pipe isn't eligible, ignore it. 如果pipe理论上是不存在的,忽略掉
         if (idx >= eligible) {
             return;
         }
 
-        //  Mark the pipe as matching.
+        //  Mark the pipe as matching.  标记该pipe为匹配
         Collections.swap(pipes, idx, matching);
         matching++;
     }
 
     //  Mark all pipes as non-matching.
+    /**
+     * 所有未匹配的pipe
+     * 
+     *
+     * @author {yourname} 2016年8月8日 下午2:33:05
+     */
     public void unmatch()
     {
         matching = 0;
     }
 
     //  Removes the pipe from the distributor object.
+    /**
+     * 移除所有pipe从关联的对象
+     * 
+     * @param pipe
+     *
+     * @author {yourname} 2016年8月8日 下午2:33:28
+     */
     public void terminated(Pipe pipe)
     {
         //  Remove the pipe from the list; adjust number of matching, active and/or
@@ -124,14 +161,21 @@ class Dist
     }
 
     //  Activates pipe that have previously reached high watermark.
+    /**
+     * active pipe
+     * 
+     * @param pipe
+     *
+     * @author {yourname} 2016年8月8日 下午2:35:36
+     */
     public void activated(Pipe pipe)
     {
-        //  Move the pipe from passive to eligible state.
+        //  Move the pipe from passive to eligible state.  移动该pipe到理论上存在的状态
         Collections.swap(pipes, pipes.indexOf(pipe), eligible);
         eligible++;
 
         //  If there's no message being sent at the moment, move it to
-        //  the active state.
+        //  the active state.  如果没有消息被发送,移动到active状态
         if (!more) {
             Collections.swap(pipes, eligible - 1, active);
             active++;
@@ -148,10 +192,10 @@ class Dist
     //  Send the message to the matching outbound pipes.
     public boolean sendToMatching(Msg msg)
     {
-        //  Is this end of a multipart message?
+        //  Is this end of a multipart message?  是否是多消息的结尾
         boolean msgMore = msg.hasMore();
 
-        //  Push the message to matching pipes.
+        //  Push the message to matching pipes.   将消息压人匹配的pipe
         distribute(msg);
 
         //  If mutlipart message is fully sent, activate all the eligible pipes.
@@ -164,17 +208,17 @@ class Dist
         return true;
     }
 
-    //  Put the message to all active pipes.
+    //  Put the message to all active pipes.  将所有的消息设置为active
     private void distribute(Msg msg)
     {
-        //  If there are no matching pipes available, simply drop the message.
+        //  If there are no matching pipes available, simply drop the message.  如果没有批评的pipe是可用的,简单的drop掉消息
         if (matching == 0) {
             return;
         }
 
         for (int i = 0; i < matching; ++i) {
             if (!write(pipes.get(i), msg)) {
-                --i; //  Retry last write because index will have been swapped
+                --i; //  Retry last write because index will have been swapped   重试最近的write,因为index会被swap
             }
         }
     }
@@ -186,6 +230,15 @@ class Dist
 
     //  Write the message to the pipe. Make the pipe inactive if writing
     //  fails. In such a case false is returned.
+    /**
+     * 写消息到pipe,标记pipe为inactive,如果写失败,在这个情况的返回false
+     * 
+     * @param pipe
+     * @param msg
+     * @return
+     *
+     * @author {yourname} 2016年8月8日 下午2:41:57
+     */
     private boolean write(Pipe pipe, Msg msg)
     {
         if (!pipe.write(msg)) {

@@ -210,6 +210,7 @@ public class Poller extends PollerBase implements Runnable
             }
 
             //  Wait for events.
+            // 等待事件
             int rc;
             long start = System.currentTimeMillis();
             try {
@@ -219,6 +220,7 @@ public class Poller extends PollerBase implements Runnable
                 throw new ZError.IOException(e);
             }
 
+            // 超时处理
             if (rc == 0) {
                 //  Guess JDK epoll bug
                 if (timeout == 0 ||

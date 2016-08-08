@@ -33,15 +33,16 @@ public class Dealer extends SocketBase
 
     //  Messages are fair-queued from inbound pipes. And load-balanced to
     //  the outbound pipes.
+    // 消息是一个公平的队列对于输入,负载均衡对于输出
     private final FQ fq;
     private final LB lb;
 
-    //  Have we prefetched a message.
+    //  Have we prefetched a message.   是否有预取的数据
     private boolean prefetched;
 
     private Msg prefetchedMsg;
 
-    //  Holds the prefetched message.
+    //  Holds the prefetched message.  保存预取的数据
     public Dealer(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -91,7 +92,7 @@ public class Dealer extends SocketBase
             return msg;
         }
 
-        //  DEALER socket doesn't use identities. We can safely drop it and
+        //  DEALER socket doesn't use identities. We can safely drop it and   
         while (true) {
             msg = fq.recv(errno);
             if (msg == null) {
@@ -107,12 +108,12 @@ public class Dealer extends SocketBase
     @Override
     protected boolean xhasIn()
     {
-        //  We may already have a message pre-fetched.
+        //  We may already have a message pre-fetched.   可能已经存在一个预取的数据
         if (prefetched) {
             return true;
         }
 
-        //  Try to read the next message to the pre-fetch buffer.
+        //  Try to read the next message to the pre-fetch buffer.   试图读取下一个消息到预取的缓存
         prefetchedMsg = xxrecv();
         if (prefetchedMsg == null) {
             return false;

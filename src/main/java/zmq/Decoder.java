@@ -54,10 +54,15 @@ public class Decoder extends DecoderBase
         tmpbufWrap.limit(1);
 
         //  At the beginning, read one byte and go to oneByteSizeReady state.
+        // 在开始,读取一个字节,同时到oneByteSizeReady状态
         nextStep(tmpbufWrap, ONE_BYTE_SIZE_READY);
     }
 
     //  Set the receiver of decoded messages.
+    /**
+     * 设置解码消息的接收器。
+     * {@inheritDoc}
+     */
     @Override
     public void setMsgSink(IMsgSink msgSink)
     {

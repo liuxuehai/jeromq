@@ -46,25 +46,7 @@ public class TestConnectDelay
         boolean rc = ZMQ.bind(to, "tcp://*:7555");
         assert (rc);
 
-        // Create a socket pushing to two endpoints - only 1 message should arrive.
-        SocketBase from = ZMQ.socket(context, ZMQ.ZMQ_PUSH);
-        assert (from != null);
-
-        val = 0;
-        ZMQ.setSocketOption(from, ZMQ.ZMQ_LINGER, val);
-        rc = ZMQ.connect(from, "tcp://localhost:7556");
-        assert (rc);
-        rc = ZMQ.connect(from, "tcp://localhost:7557");
-        assert (rc);
-        rc = ZMQ.connect(from, "tcp://localhost:7555");
-        assert (rc);
-
-        for (int i = 0; i < 10; ++i) {
-            String message = "message ";
-            message += ('0' + i);
-            int sent = ZMQ.send(from, message, 0);
-            assert (sent >= 0);
-        }
+        
 
         // We now consume from the connected pipe
         // - we should see just 5
@@ -81,12 +63,46 @@ public class TestConnectDelay
         }
         assertEquals(seen, 5);
 
-        ZMQ.close(from);
+       
 
         ZMQ.close(to);
 
         ZMQ.term(context);
     }
+    
+    @Test
+    public void testConnectDelay4() throws Exception
+    {
+        
+        Ctx context = ZMQ.createContext();
+        assert (context != null);
+        
+     // Create a socket pushing to two endpoints - only 1 message should arrive.
+        SocketBase from = ZMQ.socket(context, ZMQ.ZMQ_PUSH);
+        assert (from != null);
+
+        int val = 0;
+        ZMQ.setSocketOption(from, ZMQ.ZMQ_LINGER, val);
+        boolean rc = ZMQ.connect(from, "tcp://localhost:7556");
+        assert (rc);
+        rc = ZMQ.connect(from, "tcp://localhost:7557");
+        assert (rc);
+        rc = ZMQ.connect(from, "tcp://localhost:7555");
+        assert (rc);
+
+        for (int i = 0; i < 10; ++i) {
+            String message = "message ";
+            message += ('0' + i);
+            int sent = ZMQ.send(from, message, 0);
+            assert (sent >= 0);
+        }
+        
+        
+        ZMQ.close(from);
+        
+    }
+    
+    
 
     @Test
     public void testConnectDelay2() throws Exception

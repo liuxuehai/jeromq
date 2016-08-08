@@ -26,12 +26,14 @@ import java.nio.channels.SelectableChannel;
 public class IOThread extends ZObject implements IPollEvents, Closeable
 {
     //  I/O thread accesses incoming commands via this mailbox.
+    // I/O 线程通过该命令通过信箱
     private final Mailbox mailbox;
 
     //  Handle associated with mailbox' file descriptor.
     private final SelectableChannel mailboxHandle;
 
     //  I/O multiplexing is performed using a poller object.
+    // 通过poller实现I/O 多路复用
     private final Poller poller;
 
     final String name;
@@ -83,13 +85,14 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
 
         while (true) {
             //  Get the next command. If there is none, exit.
+            // 获取下一个命令
             Command cmd = mailbox.recv(0);
             if (cmd == null) {
                 break;
             }
 
             //  Process the command.
-
+            // 处理命令
             cmd.destination().processCommand(cmd);
         }
     }

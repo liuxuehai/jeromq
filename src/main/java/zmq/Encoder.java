@@ -36,7 +36,7 @@ public class Encoder extends EncoderBase
         super(bufsize);
         tmpbuf = new byte[10];
         tmpbufWrap = ByteBuffer.wrap(tmpbuf);
-        //  Write 0 bytes to the batch and go to messageReady state.
+        //  Write 0 bytes to the batch and go to messageReady state.  写0个字节给批次,同时到消息准备状态
         nextStep((byte[]) null, 0, MESSAGE_READY, true);
     }
 
@@ -61,7 +61,7 @@ public class Encoder extends EncoderBase
 
     private boolean sizeReady()
     {
-        //  Write message body into the buffer.
+        //  Write message body into the buffer.  写入消息体到buffer
         nextStep(inProgress.buf(),
                 MESSAGE_READY, !inProgress.hasMore());
         return true;
@@ -77,6 +77,10 @@ public class Encoder extends EncoderBase
         //  unsuccessful write will cause retry on the next state machine
         //  invocation.
 
+        /*
+         *读取新消息,如果没有返回false,新状态设置只用当写成功时,
+         *这种不成功的写会引起重试在下一次状态调用 
+         */
         if (msgSource == null) {
             return false;
         }
@@ -89,12 +93,17 @@ public class Encoder extends EncoderBase
         //  Get the message size.
         int size = inProgress.size();
 
-        //  Account for the 'flags' byte.
+        //  Account for the 'flags' byte.  
         size++;
 
         //  For messages less than 255 bytes long, write one byte of message size.
         //  For longer messages write 0xff escape character followed by 8-byte
         //  message size. In both cases 'flags' field follows.
+        /**
+         * 小于255 byte的消息,写一个字节的消息大小,
+         * 对于大于255 byte的消息写一个0xff escape 字符,之后是8个字节的消息大小
+         * 2中情况都会有一个'flag'标记
+         */
         tmpbufWrap.position(0);
         if (size < 255) {
             tmpbufWrap.limit(2);
