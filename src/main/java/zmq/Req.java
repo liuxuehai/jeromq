@@ -78,13 +78,13 @@ public class Req extends Dealer
     @Override
     protected Msg xrecv()
     {
-        //  If request wasn't send, we can't wait for reply.
+        //  If request wasn't send, we can't wait for reply. 如果请求还没有发送,
         if (!receivingReply) {
             errno.set(ZError.EFSM);
             return null;
         }
         Msg msg = null;
-        //  First part of the reply should be the original request ID.
+        //  First part of the reply should be the original request ID.  回执的第一部分应该是原始的请求id
         if (messageBegins) {
             msg = super.xrecv();
             if (msg == null) {
@@ -112,7 +112,7 @@ public class Req extends Dealer
             return null;
         }
 
-        //  If the reply is fully received, flip the FSM into request-sending state.
+        //  If the reply is fully received, flip the FSM into request-sending state.  如果回执全部获取，
         if (!msg.hasMore()) {
             receivingReply = false;
             messageBegins = true;

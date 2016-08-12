@@ -24,6 +24,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 //Multi-trie. Each node in the trie is a set of pointers to pipes.
+/**
+ * 多分类,每个分类的节点都是一个pipe的集合
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 public class Mtrie
 {
     private Set<Pipe> pipes;
@@ -54,7 +60,7 @@ public class Mtrie
     }
 
     //  Add key to the trie. Returns true if it's a new subscription
-    //  rather than a duplicate.
+    //  rather than a duplicate.   添加key到分类,
     public boolean add(byte[] prefix, int start, Pipe pipe)
     {
         return addHelper(prefix, start, pipe);

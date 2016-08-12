@@ -29,13 +29,13 @@ import java.nio.channels.SocketChannel;
 public class StreamEngine implements IEngine, IPollEvents, IMsgSink
 {
     //  Size of the greeting message:
-    //  Preamble (10 bytes) + version (1 byte) + socket type (1 byte).
+    //  Preamble (10 bytes) + version (1 byte) + socket type (1 byte).    greeting 消息的大小
     private static final int GREETING_SIZE = 12;
 
-    //  True iff we are registered with an I/O poller.
+    //  True iff we are registered with an I/O poller.  如果注册在一个i/o poller上,则为true
     private boolean ioEnabled;
 
-    //final private IOObject ioObject;
+    //final private IOObject ioObject;   最终的私有ioobject
     private SocketChannel handle;
 
     private ByteBuffer inbuf;
@@ -49,22 +49,25 @@ public class StreamEngine implements IEngine, IPollEvents, IMsgSink
     //  When true, we are still trying to determine whether
     //  the peer is using versioned protocol, and if so, which
     //  version.  When false, normal message flow has started.
+    /**
+     * 如果为true,会试图
+     */
     private boolean handshaking;
 
     //  The receive buffer holding the greeting message
-    //  that we are receiving from the peer.
+    //  that we are receiving from the peer.  获取的消息存在greeting消息,
     private final ByteBuffer greeting;
 
     //  The send buffer holding the greeting message
-    //  that we are sending to the peer.
+    //  that we are sending to the peer.  保存发送的greeting消息到该buffer
     private final ByteBuffer greetingOutputBuffer;
 
-    //  The session this engine is attached to.
+    //  The session this engine is attached to.  该engine管理的session
     private SessionBase session;
 
     //  Detached transient session.
     //private SessionBase leftover_session;
-
+    
     private Options options;
 
     // String representation of endpoint
@@ -96,11 +99,11 @@ public class StreamEngine implements IEngine, IPollEvents, IMsgSink
         encoder = null;
         decoder = null;
 
-        //  Put the socket into non-blocking mode.
+        //  Put the socket into non-blocking mode.  设置socket到非阻塞模式
         try {
             Utils.unblockSocket(this.handle);
 
-            //  Set the socket buffer limits for the underlying socket.
+            //  Set the socket buffer limits for the underlying socket.   设置该socket buffer的限制,
             if (this.options.sndbuf != 0) {
                 this.handle.socket().setSendBufferSize(this.options.sndbuf);
             }
@@ -225,7 +228,7 @@ public class StreamEngine implements IEngine, IPollEvents, IMsgSink
 
         ioObject = new IOObject(null);
         ioObject.setHandler(this);
-        //  Connect to I/O threads poller object.
+        //  Connect to I/O threads poller object.  连接到i/o线程 poller对象
         ioObject.plug(ioThread);
         ioObject.addHandle(handle);
         ioEnabled = true;
@@ -292,7 +295,7 @@ public class StreamEngine implements IEngine, IPollEvents, IMsgSink
     @Override
     public void inEvent()
     {
-        //  If still handshaking, receive and process the greeting message.
+        //  If still handshaking, receive and process the greeting message.   如果还在握手总,获取和处理greeting消息
         if (handshaking) {
             if (!handshake()) {
                 return;
@@ -302,12 +305,13 @@ public class StreamEngine implements IEngine, IPollEvents, IMsgSink
         assert (decoder != null);
         boolean disconnection = false;
 
-        //  If there's no data to process in the buffer...
+        //  If there's no data to process in the buffer...  如果没有消息处理在buffer中
         if (insize == 0) {
             //  Retrieve the buffer and read as much data as possible.
             //  Note that buffer can be arbitrarily large. However, we assume
             //  the underlying TCP layer has fixed buffer size and thus the
             //  number of bytes read will be always limited.
+            
             inbuf = decoder.getBuffer();
             insize = read(inbuf);
             inbuf.flip();

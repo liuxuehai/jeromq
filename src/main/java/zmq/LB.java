@@ -72,13 +72,13 @@ public class LB
         int index = pipes.indexOf(pipe);
 
         //  If we are in the middle of multipart message and current pipe
-        //  have disconnected, we have to drop the remainder of the message.
+        //  have disconnected, we have to drop the remainder of the message.   如果在在多消息的中间,当前pipe断开连接,就drop消息的剩余部分
         if (index == current && more) {
             dropping = true;
         }
 
         //  Remove the pipe from the list; adjust number of active pipes
-        //  accordingly.
+        //  accordingly.  移除pipe从list中,调整active的pipe数
         if (index < active) {
             active--;
             Collections.swap(pipes, index, active);
@@ -91,7 +91,7 @@ public class LB
 
     public void activated(Pipe pipe)
     {
-        //  Move the pipe to the list of active pipes.
+        //  Move the pipe to the list of active pipes.   移动pipe到active的
         Collections.swap(pipes, pipes.indexOf(pipe), active);
         active++;
     }

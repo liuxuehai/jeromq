@@ -31,45 +31,61 @@ public abstract class SocketBase extends Own
     implements IPollEvents, Pipe.IPipeEvents
 {
     //  Map of open endpoints.
+    /**
+     * Map of open endpoints.
+     */
     private final Map<String, Own> endpoints;
 
     //  Map of open inproc endpoints.
+    /**
+     * Map of open inproc endpoints.
+     */
     private final Map<String, Pipe> inprocs;
 
     //  Used to check whether the object is a socket.
+    /**
+     * 检测该对象是否是一个socket
+     */
     private int tag;
 
     //  If true, associated context was already terminated.
+    /**
+     * 如果true 关联的上下问已经关闭
+     */
     private boolean ctxTerminated;
 
     //  If true, object should have been already destroyed. However,
     //  destruction is delayed while we unwind the stack to the point
     //  where it doesn't intersect the object being destroyed.
+    /**
+     * 如果是true,对象应该已经被销毁了,
+     * 但是析构函数延迟调用,
+     */
     private boolean destroyed;
 
-    //  Socket's mailbox object.
+    //  Socket's mailbox object.  socket的邮箱
     private final Mailbox mailbox;
 
-    //  List of attached pipes.
+    //  List of attached pipes. 管理的pipe
     private final List<Pipe> pipes;
 
-    //  Reaper's poller and handle of this socket within it.
+    //  Reaper's poller and handle of this socket within it.  reaper的poller
     private Poller poller;
     private SelectableChannel handle;
 
-    //  Timestamp of when commands were processed the last time.
+    //  Timestamp of when commands were processed the last time.   最近处理的命令的时间
     private long lastTsc;
 
-    //  Number of messages received since last command processing.
+    //  Number of messages received since last command processing.  最近命令处理中获取的消息数量
     private int ticks;
 
-    //  True if the last message received had MORE flag set.
+    //  True if the last message received had MORE flag set.   如果最近获取的消息有more标记,则为true
     private boolean rcvmore;
 
-    // Monitor socket
+    // Monitor socket 监控socket
     private SocketBase monitorSocket;
 
-    // Bitmask of events being monitored
+    // Bitmask of events being monitored   监控事件
     private int monitorEvents;
 
     protected ValueReference<Integer> errno;
@@ -103,13 +119,24 @@ public abstract class SocketBase extends Own
     protected abstract void xattachPipe(Pipe pipe, boolean icanhasall);
     protected abstract void xpipeTerminated(Pipe pipe);
 
-    //  Returns false if object is not a socket.
+    //  Returns false if object is not a socket.  如果该对象不是一个socket返回false
     public boolean checkTag()
     {
         return tag == 0xbaddecaf;
     }
 
     //  Create a socket of a specified type.
+    /**
+     * 根据给定类型创建socket
+     * 
+     * @param type
+     * @param parent
+     * @param tid
+     * @param sid
+     * @return
+     *
+     * @author {yourname} 2016年8月10日 下午4:13:20
+     */
     public static SocketBase create(int type, Ctx parent, int tid, int sid)
     {
         SocketBase s = null;
@@ -168,28 +195,42 @@ public abstract class SocketBase extends Own
         assert (destroyed);
     }
 
-    //  Returns the mailbox associated with this socket.
+    //  Returns the mailbox associated with this socket. 
     public Mailbox getMailbox()
     {
         return mailbox;
     }
 
     //  Interrupt blocking call if the socket is stuck in one.
-    //  This function can be called from a different thread!
+    //  This function can be called from a different thread! 
+    /*
+     * 终结block调用如果socket,
+     */
     public void stop()
     {
         //  Called by ctx when it is terminated (zmq_term).
         //  'stop' command is sent from the threads that called zmq_term to
         //  the thread owning the socket. This way, blocking call in the
         //  owner thread can be interrupted.
+        /**
+         * 有context调用当他terminated时,stop命令从调用zmq_term的线程到拥有该socket的线程
+         * 这样block的调用在线程拥有者可以被中断
+         */
         sendStop();
     }
 
     //  Check whether transport protocol, as specified in connect or
     //  bind, is available and compatible with the socket type.
+    /**
+     * 检查传输协议
+     * 
+     * @param protocol
+     *
+     * @author {yourname} 2016年8月10日 下午5:02:04
+     */
     private void checkProtocol(String protocol)
     {
-        //  First check out whether the protcol is something we are aware of.
+        //  First check out whether the protcol is something we are aware of. 
         if (!protocol.equals("inproc") && !protocol.equals("ipc") && !protocol.equals("tcp") /*&&
               !protocol.equals("pgm") && !protocol.equals("epgm")*/) {
             throw new UnsupportedOperationException(protocol);
@@ -208,6 +249,7 @@ public abstract class SocketBase extends Own
     }
 
     //  Register the pipe with this socket.
+    //注册这个pipe到socket
     private void attachPipe(Pipe pipe)
     {
         attachPipe(pipe, false);
@@ -216,15 +258,15 @@ public abstract class SocketBase extends Own
     private void attachPipe(Pipe pipe, boolean icanhasall)
     {
         //  First, register the pipe so that we can terminate it later on.
-
+        // 首先注册pipe这样之后就可以直接terminate
         pipe.setEventSink(this);
         pipes.add(pipe);
 
-        //  Let the derived socket type know about new pipe.
+        //  Let the derived socket type know about new pipe.  让衍生的socket类型知道新的pipe
         xattachPipe(pipe, icanhasall);
 
         //  If the socket is already being closed, ask any new pipes to terminate
-        //  straight away.
+        //  straight away.  如果socket已经关闭,请求任何新pipe直接terminate
         if (isTerminating()) {
             registerTermAcks(1);
             pipe.terminate(false);
@@ -237,13 +279,13 @@ public abstract class SocketBase extends Own
             throw new ZError.CtxTerminatedException();
         }
 
-        //  First, check whether specific socket type overloads the option.
+        //  First, check whether specific socket type overloads the option. 首先检查特定的socket类型是否重载该选项
         if (xsetsockopt(option, optval)) {
             return;
         }
 
         //  If the socket type doesn't support the option, pass it to
-        //  the generic option parser.
+        //  the generic option parser.  如果该socket类型不支持该选项,交给通用的选项处理
         options.setSocketOpt(option, optval);
     }
 
@@ -504,10 +546,10 @@ public abstract class SocketBase extends Own
             boolean[] delays = {options.delayOnDisconnect, options.delayOnClose};
             Pipe.pipepair(parents, pipes, hwms, delays);
 
-            //  Attach local end of the pipe to the socket object.
+            //  Attach local end of the pipe to the socket object.   attach本地的pipe到socket
             attachPipe(pipes[0], icanhasall);
 
-            //  Attach remote end of the pipe to the session object later on.
+            //  Attach remote end of the pipe to the session object later on.  attach远程pipe到session
             session.attachPipe(pipes[1]);
         }
 
@@ -519,9 +561,17 @@ public abstract class SocketBase extends Own
     }
 
     //  Creates new endpoint ID and adds the endpoint to the map.
+    /**
+     * 创建一个新的end point id和添加这个endpoint到map
+     * 
+     * @param addr
+     * @param endpoint
+     *
+     * @author {yourname} 2016年8月12日 上午10:36:58
+     */
     private void addEndpoint(String addr, Own endpoint)
     {
-        //  Activate the session. Make it a child of this socket.
+        //  Activate the session. Make it a child of this socket. 激活这个session,这个socket 创建该socket的子类
         launchChild(endpoint);
         endpoints.put(addr, endpoint);
     }
@@ -532,13 +582,16 @@ public abstract class SocketBase extends Own
             throw new ZError.CtxTerminatedException();
         }
 
-        //  Check whether endpoint address passed to the function is valid.
+        //  Check whether endpoint address passed to the function is valid.  检测该endpoint 地址是否合法
         if (addr == null) {
             throw new IllegalArgumentException();
         }
 
         //  Process pending commands, if any, since there could be pending unprocessed processOwn()'s
-        //  (from launchChild() for example) we're asked to terminate now.
+        //  (from launchChild() for example) we're asked to terminate now.  
+        /**
+         * 处理pending命令,
+         */
         boolean rc = processCommands(0, false);
         if (!rc) {
             return false;
@@ -547,7 +600,7 @@ public abstract class SocketBase extends Own
         SimpleURI uri = SimpleURI.create(addr);
         String protocol = uri.getProtocol();
 
-        // Disconnect an inproc socket
+        // Disconnect an inproc socket  断开inproc socket 
         if (protocol.equals("inproc")) {
             if (!inprocs.containsKey(addr)) {
                 return false;
@@ -564,7 +617,7 @@ public abstract class SocketBase extends Own
         if (!endpoints.containsKey(addr)) {
             return false;
         }
-        //  Find the endpoints range (if any) corresponding to the addr_ string.
+        //  Find the endpoints range (if any) corresponding to the addr_ string.   
         Iterator<Entry<String, Own>> it = endpoints.entrySet().iterator();
 
         while (it.hasNext()) {
@@ -586,26 +639,26 @@ public abstract class SocketBase extends Own
             return false;
         }
 
-        //  Check whether message passed to the function is valid.
+        //  Check whether message passed to the function is valid.  检测消息是否合法
         if (msg == null) {
             throw new IllegalArgumentException();
         }
 
-        //  Process pending commands, if any.
+        //  Process pending commands, if any.   处理pending命令
         boolean brc = processCommands(0, true);
         if (!brc) {
             return false;
         }
 
-        //  Clear any user-visible flags that are set on the message.
+        //  Clear any user-visible flags that are set on the message.  清除任何用户可见的flag,设置在消息上的
         msg.resetFlags(Msg.MORE);
 
-        //  At this point we impose the flags on the message.
+        //  At this point we impose the flags on the message.    使用标记
         if ((flags & ZMQ.ZMQ_SNDMORE) > 0) {
             msg.setFlags(Msg.MORE);
         }
 
-        //  Try to send the message.
+        //  Try to send the message.   尝试发送消息
         boolean rc = xsend(msg);
 
         if (rc) {
@@ -617,13 +670,13 @@ public abstract class SocketBase extends Own
         }
 
         //  In case of non-blocking send we'll simply propagate
-        //  the error - including EAGAIN - up the stack.
+        //  the error - including EAGAIN - up the stack.     
         if ((flags & ZMQ.ZMQ_DONTWAIT) > 0 || options.sendTimeout == 0) {
             return false;
         }
 
         //  Compute the time when the timeout should occur.
-        //  If the timeout is infite, don't care.
+        //  If the timeout is infite, don't care. 计算超时时间,
         int timeout = options.sendTimeout;
         long end = timeout < 0 ? 0 : (Clock.nowMS() + timeout);
 
@@ -691,8 +744,8 @@ public abstract class SocketBase extends Own
 
         //  If the message cannot be fetched immediately, there are two scenarios.
         //  For non-blocking recv, commands are processed in case there's an
-        //  activate_reader command already waiting int a command pipe.
-        //  If it's not, return EAGAIN.
+        //  activate_reader command already waiting in a command pipe.
+        //  If it's not, return EAGAIN.  如果消息无法直接获取,对于非block读取,处理命令,以免 activate_reader 命令已经在命令pipe里面等待
         if ((flags & ZMQ.ZMQ_DONTWAIT) > 0 || options.recvTimeout == 0) {
             if (!processCommands(0, false)) {
                 return null;
@@ -708,12 +761,12 @@ public abstract class SocketBase extends Own
         }
 
         //  Compute the time when the timeout should occur.
-        //  If the timeout is infite, don't care.
+        //  If the timeout is infite, don't care.  计算超时
         int timeout = options.recvTimeout;
         long end = timeout < 0 ? 0 : (Clock.nowMS() + timeout);
 
         //  In blocking scenario, commands are processed over and over again until
-        //  we are able to fetch a message.
+        //  we are able to fetch a message.   在block模式下,命令会一遍一遍的处理,直到我们能获取一下消息
         boolean block = (ticks != 0);
         while (true) {
             if (!processCommands(block ? timeout : 0, false)) {
@@ -747,17 +800,17 @@ public abstract class SocketBase extends Own
 
     public void close()
     {
-        //  Mark the socket as dead
+        //  Mark the socket as dead  标记socket已经dead
         tag = 0xdeadbeef;
 
         //  Transfer the ownership of the socket from this application thread
         //  to the reaper thread which will take care of the rest of shutdown
-        //  process.
+        //  process.   转换该socket的所有权从该线程给reaper线程,会负责之后的关闭
         sendReap(this);
     }
 
     //  These functions are used by the polling mechanism to determine
-    //  which events are to be reported from this socket.
+    //  which events are to be reported from this socket.  该方法被使用被polling 机器去决定哪些事件从socket中report
     boolean hasIn()
     {
         return xhasIn();
@@ -769,17 +822,17 @@ public abstract class SocketBase extends Own
     }
 
     //  Using this function reaper thread ask the socket to register with
-    //  its poller.
+    //  its poller.    reaper线程要求socket去注册他的poller
     public void startReaping(Poller poller)
     {
-        //  Plug the socket to the reaper thread.
+        //  Plug the socket to the reaper thread.  plug该socket到reaper线程
         this.poller = poller;
         handle = mailbox.getFd();
         this.poller.addHandle(handle, this);
         this.poller.setPollIn(handle);
 
         //  Initialise the termination and check whether it can be deallocated
-        //  immediately.
+        //  immediately.   初始化termination和检查是否能立刻释放
         terminate();
         checkDestroy();
     }
@@ -788,11 +841,22 @@ public abstract class SocketBase extends Own
     //  returns only after at least one command was processed.
     //  If throttle argument is true, commands are processed at most once
     //  in a predefined time period.
+    /**
+     * 
+     * 处理命令发送给socket,如果timeout为-1,只有在至少有一个方法被处理才返回
+     * 如果throttle为true,命令在预定的事件段内至少处理一次
+     * 
+     * @param timeout
+     * @param throttle
+     * @return
+     *
+     * @author {yourname} 2016年8月12日 下午2:52:49
+     */
     private boolean processCommands(int timeout, boolean throttle)
     {
         Command cmd;
         if (timeout != 0) {
-            //  If we are asked to wait, simply ask mailbox to wait.
+            //  If we are asked to wait, simply ask mailbox to wait.  如果需要等待,就要求邮箱等待
             cmd = mailbox.recv(timeout);
         }
         else {
@@ -800,6 +864,8 @@ public abstract class SocketBase extends Own
             //  commands recently, so that we can throttle the new commands.
 
             //  Get the CPU's tick counter. If 0, the counter is not available.
+            
+            // 如果不需要等待,检查最近未处理的命令,这样就可以限制新命令,获取cpu的tick计数器,如果为0,计数器不可用
             long tsc = 0; // save cpu Clock.rdtsc ();
 
             //  Optimised version of command processing - it doesn't have to check
@@ -808,21 +874,25 @@ public abstract class SocketBase extends Own
             //  depending on CPU speed: It's ~1ms on 3GHz CPU, ~2ms on 1.5GHz CPU
             //  etc. The optimisation makes sense only on platforms where getting
             //  a timestamp is a very cheap operation (tens of nanoseconds).
+            /**
+             * 命令处理的优化版本,不用每次都检查进来的命令,只用从上一次处理命令后超过给定时间才会处理
+             * 命令延迟的变化依赖于cpu的速度,1ms在3GHz cpu,这种优化只用在平台获取一个时间戳很廉价的操作上.
+             */
             if (tsc != 0 && throttle) {
                 //  Check whether TSC haven't jumped backwards (in case of migration
                 //  between CPU cores) and whether certain time have elapsed since
-                //  last command processing. If it didn't do nothing.
+                //  last command processing. If it didn't do nothing. 检查tsc没有向后跳,同时释放过去了确定的时间
                 if (tsc >= lastTsc && tsc - lastTsc <= Config.MAX_COMMAND_DELAY.getValue()) {
                     return true;
                 }
                 lastTsc = tsc;
             }
 
-            //  Check whether there are any commands pending for this thread.
+            //  Check whether there are any commands pending for this thread. 检查是否有命令
             cmd = mailbox.recv(0);
         }
 
-        //  Process all the commands available at the moment.
+        //  Process all the commands available at the moment.  处理所有命令
         while (true) {
             if (cmd == null) {
                 break;
@@ -846,6 +916,9 @@ public abstract class SocketBase extends Own
         //  We'll remember the fact so that any blocking call is interrupted and any
         //  further attempt to use the socket will return ETERM. The user is still
         //  responsible for calling zmq_close on the socket though!
+        
+        //当socket还在运行时,被调用zmq_term记录当前信息,这样所有block命令会被中断,
+        //任何试图使用该socket都会返回ETERM,用户任然需要调用zmq_close
         stopMonitor();
         ctxTerminated = true;
 
@@ -863,15 +936,16 @@ public abstract class SocketBase extends Own
         //  Unregister all inproc endpoints associated with this socket.
         //  Doing this we make sure that no new pipes from other sockets (inproc)
         //  will be initiated.
+        //取消注册在这个socket上的所有 inproc endpoint,这可以确保没有新的pipe从其他socket被初始化
         unregisterEndpoints(this);
 
-        //  Ask all attached pipes to terminate.
+        //  Ask all attached pipes to terminate.  请求所有关联的pipe注销
         for (int i = 0; i != pipes.size(); ++i) {
             pipes.get(i).terminate(false);
         }
         registerTermAcks(pipes.size());
 
-        //  Continue the termination process immediately.
+        //  Continue the termination process immediately.  立刻继续处理termination
         super.processTerm(linger);
     }
 
@@ -931,7 +1005,10 @@ public abstract class SocketBase extends Own
         //  This function is invoked only once the socket is running in the context
         //  of the reaper thread. Process any commands from other threads/sockets
         //  that may be available at the moment. Ultimately, the socket will
-        //  be destroyed.
+        //  be destroyed.  
+        /**
+         * 该方法只会调用一次当该socket允许在reaper线程上下文时,处理其他的线程/socket
+         */
         try {
             processCommands(0, false);
         }
@@ -967,16 +1044,22 @@ public abstract class SocketBase extends Own
 
     //  To be called after processing commands or invoking any command
     //  handlers explicitly. If required, it will deallocate the socket.
+    /**
+     * 在处理命令后调用或明确的调用命令之后
+     * 
+     *
+     * @author {yourname} 2016年8月12日 下午3:45:14
+     */
     private void checkDestroy()
     {
-        //  If the object was already marked as destroyed, finish the deallocation.
+        //  If the object was already marked as destroyed, finish the deallocation.  如果对象已经被标记为销毁,
         if (destroyed) {
-            //  Remove the socket from the reaper's poller.
+            //  Remove the socket from the reaper's poller.  清除socket从reaper的poller
             poller.removeHandle(handle);
-            //  Remove the socket from the context.
+            //  Remove the socket from the context.  移除socket从上下文
             destroySocket(this);
 
-            //  Notify the reaper about the fact.
+            //  Notify the reaper about the fact.  通知reaper
             sendReaped();
 
             //  Deallocate.
@@ -1003,7 +1086,7 @@ public abstract class SocketBase extends Own
             pipe.terminate(false);
         }
         else {
-            // Notify derived sockets of the hiccup
+            // Notify derived sockets of the hiccup  通知继承类hiccup
             xhiccuped(pipe);
         }
     }
@@ -1011,10 +1094,10 @@ public abstract class SocketBase extends Own
     @Override
     public void pipeTerminated(Pipe pipe)
     {
-        //  Notify the specific socket type about the pipe termination.
+        //  Notify the specific socket type about the pipe termination.   通知子类pipe termination
         xpipeTerminated(pipe);
 
-        // Remove pipe from inproc pipes
+        // Remove pipe from inproc pipes   移除pipe从pipes
         Iterator<Entry<String, Pipe>> it = inprocs.entrySet().iterator();
         while (it.hasNext()) {
             if (it.next().getValue() == pipe) {
@@ -1024,7 +1107,7 @@ public abstract class SocketBase extends Own
         }
 
         //  Remove the pipe from the list of attached pipes and confirm its
-        //  termination if we are already shutting down.
+        //  termination if we are already shutting down.     移除pipe从管理的pipe list,确认是否termination
         pipes.remove(pipe);
         if (isTerminating()) {
             unregisterTermAck();
@@ -1032,15 +1115,22 @@ public abstract class SocketBase extends Own
     }
 
     //  Moves the flags from the message to local variables,
-    //  to be later retrieved by getSocketOpt.
+    //  to be later retrieved by getSocketOpt.  
+    /**
+     * 将flag赋给本地变量
+     * 
+     * @param msg
+     *
+     * @author {yourname} 2016年8月12日 下午3:51:50
+     */
     private void extractFlags(Msg msg)
     {
-        //  Test whether IDENTITY flag is valid for this socket type.
+        //  Test whether IDENTITY flag is valid for this socket type.  检测IDENTITY标签是否可用
         if ((msg.flags() & Msg.IDENTITY) > 0) {
             assert (options.recvIdentity);
         }
 
-        //  Remove MORE flag.
+        //  Remove MORE flag.  移除more标签
         rcvmore = msg.hasMore();
     }
 
@@ -1062,13 +1152,13 @@ public abstract class SocketBase extends Own
 
         checkProtocol(protocol);
 
-        // Event notification only supported over inproc://
+        // Event notification only supported over inproc://  事件通知只支持inproc
         if (!protocol.equals("inproc")) {
             stopMonitor();
             throw new IllegalArgumentException("inproc socket required");
         }
 
-        // Register events to monitor
+        // Register events to monitor  注册事件到监听器
         monitorEvents = events;
 
         monitorSocket = getCtx().createSocket(ZMQ.ZMQ_PAIR);
@@ -1076,7 +1166,7 @@ public abstract class SocketBase extends Own
             return false;
         }
 
-        // Never block context termination on pending event messages
+        // Never block context termination on pending event messages  永远不block上下文termination在pending 事件消息时
         int linger = 0;
         try {
             monitorSocket.setSocketOpt(ZMQ.ZMQ_LINGER, linger);

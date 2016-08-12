@@ -47,13 +47,13 @@ public class Poller extends PollerBase implements Runnable
             ops = 0;
         }
     }
-    //  This table stores data for registered descriptors.
+    //  This table stores data for registered descriptors.  该table存储数据给注册的描述
     private final Map<SelectableChannel, PollSet> fdTable;
 
-    //  If true, there's at least one retired event source.
+    //  If true, there's at least one retired event source.   如果为true,至少有一个重试事件源
     private final AtomicBoolean retired = new AtomicBoolean(false);
 
-    //  If true, thread is in the process of shutting down.
+    //  If true, thread is in the process of shutting down.  如果true,线程在关闭的处理中
     private volatile boolean stopping;
     private volatile boolean stopped;
 

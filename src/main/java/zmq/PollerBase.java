@@ -59,6 +59,13 @@ abstract class PollerBase
 
     //  Returns load of the poller. Note that this function can be
     //  invoked from a different thread!
+    /**
+     * 返回该poller的负载
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月10日 下午4:29:25
+     */
     public final int getLoad()
     {
         return load.get();

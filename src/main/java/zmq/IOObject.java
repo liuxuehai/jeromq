@@ -24,7 +24,13 @@ import java.nio.channels.SelectableChannel;
 //  Simple base class for objects that live in I/O threads.
 //  It makes communication with the poller object easier and
 //  makes defining unneeded event handlers unnecessary.
-
+/**
+ * 在i/o线程中的基础类
+ * 可以使poller对象更容易沟通,同时对定义的不需要的事件不必要处理
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 public class IOObject implements IPollEvents
 {
     private Poller poller;
@@ -40,12 +46,19 @@ public class IOObject implements IPollEvents
     //  When migrating an object from one I/O thread to another, first
     //  unplug it, then migrate it, then plug it to the new thread.
 
+    /**
+     * 当迁移一个对象从一个i/o线程到另一个,首先unplug它,然后迁移,之后再plug他到新线程
+     * 
+     * @param ioThread
+     *
+     * @author {yourname} 2016年8月11日 下午2:59:30
+     */
     public void plug(IOThread ioThread)
     {
         assert (ioThread != null);
         assert (poller == null);
 
-        //  Retrieve the poller from the thread we are running in.
+        //  Retrieve the poller from the thread we are running in. 恢复该poller从这个运行的线程
         poller = ioThread.getPoller();
     }
 
@@ -54,7 +67,7 @@ public class IOObject implements IPollEvents
         assert (poller != null);
 
         //  Forget about old poller in preparation to be migrated
-        //  to a different I/O thread.
+        //  to a different I/O thread.   在准备迁移到新的i/o线程时,销毁掉旧的poller
         poller = null;
         handler = null;
     }

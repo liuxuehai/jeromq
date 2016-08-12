@@ -40,9 +40,9 @@ public class Msg
     private int size;
     private byte[] data;
     private final ByteBuffer buf;
-    // keep track of relative write position
+    // keep track of relative write position   保存write的相对地址
     private int writeIndex = 0;
-    // keep track of relative read position
+    // keep track of relative read position    保存read的相对地址
     private int readIndex = 0;
 
     public Msg()

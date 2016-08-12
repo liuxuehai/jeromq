@@ -31,11 +31,11 @@ public class Rep extends Router
         }
     }
     //  If true, we are in process of sending the reply. If false we are
-    //  in process of receiving a request.
+    //  in process of receiving a request.  如果为true,我们在处理发送回执,如果为false,则是处理获取一个请求
     private boolean sendingReply;
 
     //  If true, we are starting to receive a request. The beginning
-    //  of the request is the backtrace stack.
+    //  of the request is the backtrace stack.  如果为true,开始获取请求,请求的开始是回溯stack
     private boolean requestBegins;
 
     public Rep(Ctx parent, int tid, int sid)
@@ -50,20 +50,20 @@ public class Rep extends Router
     @Override
     protected boolean xsend(Msg msg)
     {
-        //  If we are in the middle of receiving a request, we cannot send reply.
+        //  If we are in the middle of receiving a request, we cannot send reply.   如果在获取请求中,不能发送回执
         if (!sendingReply) {
             throw new IllegalStateException("Cannot send another reply");
         }
 
         boolean more = msg.hasMore();
 
-        //  Push message to the reply pipe.
+        //  Push message to the reply pipe.  发送消息到回执pipe
         boolean rc = super.xsend(msg);
         if (!rc) {
             return rc;
         }
 
-        //  If the reply is complete flip the FSM back to request receiving state.
+        //  If the reply is complete flip the FSM back to request receiving state. 如果回执完成,返回到获取消息的状态
         if (!more) {
             sendingReply = false;
         }
@@ -74,14 +74,14 @@ public class Rep extends Router
     @Override
     protected Msg xrecv()
     {
-        //  If we are in middle of sending a reply, we cannot receive next request.
+        //  If we are in middle of sending a reply, we cannot receive next request.   如果在获取请求中,不能发送回执
         if (sendingReply) {
             throw new IllegalStateException("Cannot receive another request");
         }
 
         Msg msg = null;
         //  First thing to do when receiving a request is to copy all the labels
-        //  to the reply pipe.
+        //  to the reply pipe.    当获取一个请求时,首先负责所有的label到回执pipe
         if (requestBegins) {
             while (true) {
                 msg = super.xrecv();
@@ -90,10 +90,10 @@ public class Rep extends Router
                 }
 
                 if (msg.hasMore()) {
-                    //  Empty message part delimits the traceback stack.
+                    //  Empty message part delimits the traceback stack.  空消息
                     boolean bottom = (msg.size() == 0);
 
-                    //  Push it to the reply pipe.
+                    //  Push it to the reply pipe.  push到回执pipe
                     boolean rc = super.xsend(msg);
                     assert (rc);
                     if (bottom) {
@@ -109,13 +109,13 @@ public class Rep extends Router
             requestBegins = false;
         }
 
-        //  Get next message part to return to the user.
+        //  Get next message part to return to the user.  获取下一部分的消息返回给用户
         msg = super.xrecv();
         if (msg == null) {
             return null;
         }
 
-        //  If whole request is read, flip the FSM to reply-sending state.
+        //  If whole request is read, flip the FSM to reply-sending state.  如果所有的消息都read,返回到回执发送状态
         if (!msg.hasMore()) {
             sendingReply = true;
             requestBegins = true;

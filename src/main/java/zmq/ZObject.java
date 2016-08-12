@@ -21,12 +21,24 @@ package zmq;
 
 //  Base class for all objects that participate in inter-thread
 //  communication.
+/**
+ * 基础类给所有对象通讯在内部线程之间
+ * 
+ * @since 1.0.0
+ * @version $Id$
+ */
 public abstract class ZObject
 {
     //  Context provides access to the global state.
+    /**
+     * 上下问提供访问全局状态
+     */
     private final Ctx ctx;
 
     //  Thread ID of the thread the object belongs to.
+    /**
+     * 线程id
+     */
     private final int tid;
 
     protected ZObject(Ctx ctx, int tid)
@@ -151,7 +163,7 @@ public abstract class ZObject
     protected void sendStop()
     {
         //  'stop' command goes always from administrative thread to
-        //  the current object.
+        //  the current object.  stop命令总是从管理者到当前对象
         Command cmd = new Command(this, Command.Type.STOP);
         ctx.sendCommand(tid, cmd);
     }
@@ -360,5 +372,7 @@ public abstract class ZObject
     private void sendCommand(Command cmd)
     {
         ctx.sendCommand(cmd.destination().getTid(), cmd);
+        
+        System.out.println(cmd);
     }
 }

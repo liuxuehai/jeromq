@@ -46,6 +46,7 @@ public class Pair extends SocketBase
 
         //  ZMQ_PAIR socket can only be connected to a single peer.
         //  The socket rejects any further connection requests.
+        // ZMQ_PAIR socket 只能连接到一个单独的peer,该socket拒绝任何新的连接请求
         if (this.pipe == null) {
             this.pipe = pipe;
         }
@@ -94,10 +95,10 @@ public class Pair extends SocketBase
     @Override
     protected Msg xrecv()
     {
-        //  Deallocate old content of the message.
+        //  Deallocate old content of the message.  释放旧消息的context
         Msg msg = pipe == null ? null : pipe.read();
         if (msg == null) {
-            //  Initialise the output parameter to be a 0-byte message.
+            //  Initialise the output parameter to be a 0-byte message.  初始化输出参数到0字节消息
             errno.set(ZError.EAGAIN);
             return null;
         }

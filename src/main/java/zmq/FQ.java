@@ -39,14 +39,22 @@ class FQ
 
     //  Number of active pipes. All the active pipes are located at the
     //  beginning of the pipes array.
-    // active的pipe数,
+    /**
+     * active的pipe数, 
+     */
     private int active;
 
     //  Index of the next bound pipe to read a message from.
+    /**
+     * 从下一个bound pipe读取消息的索引 
+     */
     private int current;
 
     //  If true, part of a multipart message was already received, but
     //  there are following parts still waiting in the current pipe.
+    /**
+     * 如果为true,则部分消息已经被获取,但是还有剩余的部分还在当前pipe中
+     */
     private boolean more;
 
     public FQ()
@@ -71,6 +79,9 @@ class FQ
 
         //  Remove the pipe from the list; adjust number of active pipes
         //  accordingly.
+        /**
+         * 移除pipe从list,调整active pipe的数量
+         */
         if (index < active) {
             active--;
             Collections.swap(pipes, index, active);
@@ -83,7 +94,7 @@ class FQ
 
     public void activated(Pipe pipe)
     {
-        //  Move the pipe to the list of active pipes.
+        //  Move the pipe to the list of active pipes.  移动该pipe到active pipes中
         Collections.swap(pipes, pipes.indexOf(pipe), active);
         active++;
     }

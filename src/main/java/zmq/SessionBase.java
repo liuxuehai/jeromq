@@ -28,43 +28,50 @@ class SessionBase extends Own implements
 {
     //  If true, this session (re)connects to the peer. Otherwise, it's
     //  a transient session created by the listener.
+    /**
+     * 如果true,session 连接套peer,否则会是一个由listener创建的短暂的session
+     * 
+     */
     private boolean connect;
 
-    //  Pipe connecting the session to its socket.
+    //  Pipe connecting the session to its socket.   pipe连接的session 到socket
     private Pipe pipe;
 
     //  This set is added to with pipes we are disconnecting, but haven't yet completed
+    /**
+     * 该集合为正在断开连接的pipe,但是还没有完成
+     */
     private final Set<Pipe> terminatingPipes;
 
     //  This flag is true if the remainder of the message being processed
-    //  is still in the in pipe.
+    //  is still in the in pipe.   如果消息的在处理的剩余部分依然在pipe中,那就为true
     private boolean incompleteIn;
 
     //  True if termination have been suspended to push the pending
-    //  messages to the network.
+    //  messages to the network.    如果termination暂时push pending消息到network,则为true
     private boolean pending;
 
-    //  The protocol I/O engine connected to the session.
+    //  The protocol I/O engine connected to the session.   连接到session的i/o engine协议
     private IEngine engine;
 
-    //  The socket the session belongs to.
-    protected SocketBase socket;
+    //  The socket the session belongs to.   session所属的socket  
+    protected SocketBase socket;  
 
     //  I/O thread the session is living in. It will be used to plug in
-    //  the engines into the same thread.
+    //  the engines into the same thread.   session存在的i/o线程,用于plug该engine到相同的线程
     private IOThread ioThread;
 
-    //  ID of the linger timer
+    //  ID of the linger timer  
     private static final int LINGER_TIMER_ID = 0x20;
 
     //  True is linger timer is running.
     private boolean hasLingerTimer;
 
-    //  If true, identity has been sent/received from the network.
+    //  If true, identity has been sent/received from the network.  标记接收/发送
     private boolean identitySent;
     private boolean identityReceived;
 
-    //  Protocol and address to use when connecting.
+    //  Protocol and address to use when connecting.   连接到一个地址的协议
     private final Address addr;
 
     private IOObject ioObject;
@@ -150,7 +157,7 @@ class SessionBase extends Own implements
     {
         assert (pipe == null);
 
-        //  If there's still a pending linger timer, remove it.
+        //  If there's still a pending linger timer, remove it.  如果还有pending linger timer,移除它
         if (hasLingerTimer) {
             ioObject.cancelTimer(LINGER_TIMER_ID);
             hasLingerTimer = false;
@@ -162,7 +169,7 @@ class SessionBase extends Own implements
         }
     }
 
-    //  To be used once only, when creating the session.
+    //  To be used once only, when creating the session.  
     public void attachPipe(Pipe pipe)
     {
         assert (!isTerminating());

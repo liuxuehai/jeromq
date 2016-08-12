@@ -32,22 +32,31 @@ import java.util.concurrent.atomic.AtomicInteger;
 //  to signal_fd there can be at most one signal in the signaler at any
 //  given moment. Attempt to send a signal before receiving the previous
 //  one will result in undefined behaviour.
-
+/*
+ * 这是一个跨平台的类,类似于signal_fd,于signal_fd相比,这里最多只能有一个signal在任何给定的时间
+ * 试图在接收之前发送一个signal,会导致undefined行为
+ */
 public class Signaler
         implements Closeable
 {
     //  Underlying write & read file descriptor.
+    /*
+     *底层writer 和read file描述
+     */
     private final Pipe.SinkChannel w;
     private final Pipe.SourceChannel r;
     private final Selector selector;
 
     // Selector.selectNow at every sending message doesn't show enough performance
+    /**
+     * Selector.selectNow  在每次发送消息都不会有很好的性能
+     */
     private final AtomicInteger wcursor = new AtomicInteger(0);
     private int rcursor = 0;
 
     public Signaler()
     {
-        //  Create the socketpair for signaling.
+        //  Create the socketpair for signaling.  创建一个socket pair 去signal
         Pipe pipe;
 
         try {
@@ -59,7 +68,7 @@ public class Signaler
         r = pipe.source();
         w = pipe.sink();
 
-        //  Set both fds to non-blocking mode.
+        //  Set both fds to non-blocking mode.  设置为非阻塞
         try {
             Utils.unblockSocket(w);
             Utils.unblockSocket(r);
@@ -141,6 +150,10 @@ public class Signaler
                 // waitEvent(0) is called every read/send of SocketBase
                 // instant readiness is not strictly required
                 // On the other hand, we can save lots of system call and increase performance
+                /**
+                 * waitEvent(0) 在每次SocketBase read/send 调用 ,实时的准备是不直接需要的
+                 * 另一方面,可以节省系统调用,提高性能
+                 */
                 return rcursor < wcursor.get();
 
             }

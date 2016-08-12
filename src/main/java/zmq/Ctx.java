@@ -65,27 +65,47 @@ public class Ctx
 
     }
     //  Used to check whether the object is a context.
+    /**
+     * 检查该对象是否是一个context
+     */
     private int tag;
 
     //  Sockets belonging to this context. We need the list so that
     //  we can notify the sockets when zmq_term() is called. The sockets
     //  will return ETERM then.
+    /**
+     * 属于context的socket,当 zmq_term调用时可以通过这个list通知所有socket
+     * 
+     */
     private final List<SocketBase> sockets;
 
     //  List of unused thread slots.
+    /**
+     * 没有使用的线程slot
+     */
     private final Deque<Integer> emptySlots;
 
     //  If true, init has been called but no socket has been created
     //  yet. Launching of I/O threads is delayed.
+    /**
+     * 如果是true,初始化已经开始,但是还没有socket被创建,i/o线程的启动被延迟
+     */
     private AtomicBoolean starting = new AtomicBoolean(true);
 
     //  If true, zmq_term was already called.
+    /**
+     * 如果是true ,则zmq_term已经被调用
+     */
     private boolean terminating;
 
     //  Synchronisation of accesses to global slot-related data:
     //  sockets, emptySlots, terminating. It also synchronises
     //  access to zombie sockets as such (as opposed to slots) and provides
     //  a memory barrier to ensure that all CPU cores see the same data.
+    /**
+     * 同步所有访问全局slot相关的数据,socket,emptySlot,terminating
+     * 同时同步访问所有僵尸socket,提供内存屏障保证所有cpu核心数据同步
+     */
     private final Lock slotSync;
 
     //  The reaper thread.
@@ -95,31 +115,55 @@ public class Ctx
     private final List<IOThread> ioThreads;
 
     //  Array of pointers to mailboxes for both application and I/O threads.
+    /**
+     * 邮箱数据指针,
+     */
     private int slotCount;
     private Mailbox[] slots;
 
     //  Mailbox for zmq_term thread.
+    /**
+     * zmq_term 线程邮箱
+     */
     private final Mailbox termMailbox;
 
     //  List of inproc endpoints within this context.
+    /**
+     * 
+     */
     private final Map<String, Endpoint> endpoints;
 
     //  Synchronisation of access to the list of inproc endpoints.
+    /**
+     * 同步访问inproc endpoints.
+     */
     private final Lock endpointsSync;
 
     //  Maximum socket ID.
     private static AtomicInteger maxSocketId = new AtomicInteger(0);
 
     //  Maximum number of sockets that can be opened at the same time.
+    /**
+     * 同一时间可以开启的最大socket数
+     */
     private int maxSockets;
 
     //  Number of I/O threads to launch.
+    /**
+     * i/o线程数开启
+     */
     private int ioThreadCount;
 
     //  Does context wait (possibly forever) on termination?
+    /**
+     * context是否在终结上一直等待
+     */
     private boolean blocky;
 
     //  Synchronisation of access to context options.
+    /**
+     * 同步访问context options
+     */
     private final Lock optSync;
 
     public static final int TERM_TID = 0;
@@ -165,6 +209,13 @@ public class Ctx
     }
 
     //  Returns false if object is not a context.
+    /**
+     * 如果对象不是一个context就返回false
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月10日 下午3:51:09
+     */
     public boolean checkTag()
     {
         return tag == 0xabadcafe;
@@ -174,7 +225,13 @@ public class Ctx
     //  no more sockets open it'll cause all the infrastructure to be shut
     //  down. If there are open sockets still, the deallocation happens
     //  after the last one is closed.
-
+    /**
+     * 用户调用zmq_term时该方法被调用
+     * 如果没有socket开启,那么所有底层都会关闭,
+     * 如果还有socket开始,那么底层释放会在最后一个socket关闭
+     *
+     * @author {yourname} 2016年8月10日 下午3:51:57
+     */
     public void terminate()
     {
         tag = 0xdeadbeef;
@@ -183,15 +240,22 @@ public class Ctx
             slotSync.lock();
             try {
                 //  Check whether termination was already underway, but interrupted and now
-                //  restarted.
+                //  restarted.  检测termination释放已经在执行,但是被中断了,现在重新启动
                 boolean restarted = terminating;
                 terminating = true;
 
                 //  First attempt to terminate the context.
+                /**
+                 * 第一次尝试终结context
+                 */
                 if (!restarted) {
                     //  First send stop command to sockets so that any blocking calls
                     //  can be interrupted. If there are no sockets we can ask reaper
                     //  thread to stop.
+                    /**
+                     * 发送stop命令给socket,这样所有blocking的调用都会被中断
+                     * 如果没有socket了,那么久关闭reaper线程
+                     */
                     for (SocketBase socket : sockets) {
                         socket.stop();
                     }
@@ -204,6 +268,7 @@ public class Ctx
                 slotSync.unlock();
             }
             //  Wait till reaper thread closes all the sockets.
+            //等待reaper线程关闭所有线程
             Command cmd = termMailbox.recv(-1);
             if (cmd == null) {
                 throw new IllegalStateException();
@@ -218,7 +283,7 @@ public class Ctx
             }
         }
 
-        //  Deallocate the resources.
+        //  Deallocate the resources. 释放资源
         try {
             destroy();
         }
@@ -314,7 +379,7 @@ public class Ctx
                 slots[REAPER_TID] = reaper.getMailbox();
                 reaper.start();
 
-                //  Create I/O thread objects and launch them.
+                //  Create I/O thread objects and launch them. 创建i/o线程
                 for (int i = 2; i != ios + 2; i++) {
                     IOThread ioThread = new IOThread(this, i);
                     //alloc_assert (io_thread);
@@ -323,7 +388,7 @@ public class Ctx
                     ioThread.start();
                 }
 
-                //  In the unused part of the slot array, create a list of empty slots.
+                //  In the unused part of the slot array, create a list of empty slots. 其余没有使用的slot数组,创建一个空的slot
                 for (int i = (int) slotCount - 1;
                       i >= (int) ios + 2; i--) {
                     emptySlots.add(i);
@@ -331,12 +396,12 @@ public class Ctx
                 }
             }
 
-            //  Once zmq_term() was called, we can't create new sockets.
+            //  Once zmq_term() was called, we can't create new sockets. 如果zmq_term已经被调用,就不能创建新socket
             if (terminating) {
                 throw new ZError.CtxTerminatedException();
             }
 
-            //  If maxSockets limit was reached, return error.
+            //  If maxSockets limit was reached, return error.  如果没有可用的slot,返回error
             if (emptySlots.isEmpty()) {
                 throw new IllegalStateException("EMFILE");
             }
@@ -344,10 +409,10 @@ public class Ctx
             //  Choose a slot for the socket.
             int slot = emptySlots.pollLast();
 
-            //  Generate new unique socket ID.
+            //  Generate new unique socket ID.  生成唯一socket id
             int sid = maxSocketId.incrementAndGet();
 
-            //  Create the socket and register its mailbox.
+            //  Create the socket and register its mailbox.  创建socket,同时注册相应的邮箱
             s = SocketBase.create(type, this, slot, sid);
             if (s == null) {
                 emptySlots.addLast(slot);
@@ -367,17 +432,18 @@ public class Ctx
     {
         slotSync.lock();
 
-        //  Free the associated thread slot.
+        //  Free the associated thread slot. 释放关联的线程slot
         try {
             int tid = socket.getTid();
             emptySlots.add(tid);
             slots[tid] = null;
 
-            //  Remove the socket from the list of sockets.
+            //  Remove the socket from the list of sockets. 从list移除该socket
+            
             sockets.remove(socket);
 
             //  If zmq_term() was already called and there are no more socket
-            //  we can ask reaper thread to terminate.
+            //  we can ask reaper thread to terminate.  如果zmq_term已经被调用,那么久没有socket需要reaper线程去终结
             if (terminating && sockets.isEmpty()) {
                 reaper.stop();
             }
@@ -388,12 +454,27 @@ public class Ctx
     }
 
     //  Returns reaper thread object.
+    /**
+     * 返回reaper线程对象
+     * 
+     * @return
+     *
+     * @author {yourname} 2016年8月10日 下午4:21:05
+     */
     ZObject getReaper()
     {
         return reaper;
     }
 
     //  Send command to the destination thread.
+    /**
+     * 发送命令去目标线程
+     * 
+     * @param tid
+     * @param command
+     *
+     * @author {yourname} 2016年8月10日 下午4:21:18
+     */
     void sendCommand(int tid, final Command command)
     {
         slots[tid].send(command);
@@ -402,13 +483,22 @@ public class Ctx
     //  Returns the I/O thread that is the least busy at the moment.
     //  Affinity specifies which I/O threads are eligible (0 = all).
     //  Returns NULL if no I/O thread is available.
+    /**
+     * 返回i/o线程,这个时间最忙的
+     * Affinity 指定哪一个线程是符合小姐
+     * 返回null如果没有线程可用
+     * @param affinity
+     * @return
+     *
+     * @author {yourname} 2016年8月10日 下午4:25:46
+     */
     IOThread chooseIoThread(long affinity)
     {
         if (ioThreads.isEmpty()) {
             return null;
         }
 
-        //  Find the I/O thread with minimum load.
+        //  Find the I/O thread with minimum load.  用最小的负荷找到i/o线程
         int minLoad = -1;
         IOThread selectedIoThread = null;
 
@@ -476,6 +566,10 @@ public class Ctx
             //  get deallocated until "bind" command is issued by the caller.
             //  The subsequent 'bind' has to be called with inc_seqnum parameter
             //  set to false, so that the seqnum isn't incremented twice.
+            /**
+             * 增加peer的命令的序列数,这样它就不会释放,直到bind命令被调用者发布
+             * 后面的bind命令会调用inc_seqnum参数设置为false,那么命令的序列数就不会增加2次
+             */
             endpoint.socket.incSeqnum();
         }
         finally {

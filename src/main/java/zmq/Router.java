@@ -38,14 +38,14 @@ public class Router extends SocketBase
         }
     }
 
-    //  Fair queueing object for inbound pipes.
+    //  Fair queueing object for inbound pipes.  公平的queue对象为inbound pipe
     private final FQ fq;
 
-    //  True iff there is a message held in the pre-fetch buffer.
+    //  True iff there is a message held in the pre-fetch buffer. 如果一个消息持有预取的buffer则为true
     private boolean prefetched;
 
-    //  If true, the receiver got the message part with
-    //  the peer's identity.
+    //  If true, the receiver got the message part with  
+    //  the peer's identity.  如果为true 接收则获取的消息有peer的标示
     private boolean identitySent;
 
     //  Holds the prefetched identity.
@@ -54,7 +54,7 @@ public class Router extends SocketBase
     //  Holds the prefetched message.
     private Msg prefetchedMsg;
 
-    //  If true, more incoming message parts are expected.
+    //  If true, more incoming message parts are expected. 如果为true,更多的消息会被期待
     private boolean moreIn;
 
     class Outpipe
@@ -69,24 +69,24 @@ public class Router extends SocketBase
         }
     };
 
-    //  We keep a set of pipes that have not been identified yet.
+    //  We keep a set of pipes that have not been identified yet. 保存部分尚未确认的pipe
     private final Set<Pipe> anonymousPipes;
 
-    //  Outbound pipes indexed by the peer IDs.
+    //  Outbound pipes indexed by the peer IDs.  
     private final Map<Blob, Outpipe> outpipes;
 
-    //  The pipe we are currently writing to.
+    //  The pipe we are currently writing to.  当前正写入的pipe
     private Pipe currentOut;
 
-    //  If true, more outgoing message parts are expected.
+    //  If true, more outgoing message parts are expected.  如果true,更多发送的消息
     private boolean moreOut;
 
     //  Peer ID are generated. It's a simple increment and wrap-over
-    //  algorithm. This value is the next ID to use (if not used already).
+    //  algorithm. This value is the next ID to use (if not used already).  peer id 生成,简单的递增,这个值是下一个id使用
     private int nextPeerId;
 
     // If true, report EHOSTUNREACH to the caller instead of silently dropping
-    // the message targeting an unknown peer.
+    // the message targeting an unknown peer. 如果true,
     private boolean mandatory;
 
     private boolean handover;
@@ -195,7 +195,7 @@ public class Router extends SocketBase
     protected boolean xsend(Msg msg)
     {
         //  If this is the first part of the message it's the ID of the
-        //  peer to send the message to.
+        //  peer to send the message to.  如果这是消息的第一部分,
         if (!moreOut) {
             assert (currentOut == null);
 
@@ -207,7 +207,7 @@ public class Router extends SocketBase
 
                 //  Find the pipe associated with the identity stored in the prefix.
                 //  If there's no such pipe just silently ignore the message, unless
-                //  mandatory is set.
+                //  mandatory is set.  找到pipe管理的标示存储在prefix,如果没有这样的pipe,就忽略掉这个消息
                 Blob identity = Blob.createBlob(msg.data(), true);
                 Outpipe op = outpipes.get(identity);
 
@@ -236,7 +236,7 @@ public class Router extends SocketBase
         //  Check whether this is the last part of the message.
         moreOut = msg.hasMore();
 
-        //  Push the message into the pipe. If there's no out pipe, just drop it.
+        //  Push the message into the pipe. If there's no out pipe, just drop it. push消息给pipe,如果没有out pipe,就直接drop掉
         if (currentOut != null) {
             boolean ok = currentOut.write(msg);
             if (!ok) {
@@ -287,7 +287,7 @@ public class Router extends SocketBase
 
         assert (pipe.get() != null);
 
-        //  If we are in the middle of reading a message, just return the next part.
+        //  If we are in the middle of reading a message, just return the next part.  如果在读取消息的中间,就返回下一部分
         if (moreIn) {
             moreIn = msg.hasMore();
         }
@@ -307,7 +307,7 @@ public class Router extends SocketBase
         return msg;
     }
 
-    //  Rollback any message parts that were sent but not yet flushed.
+    //  Rollback any message parts that were sent but not yet flushed. 回滚任何消息已经send但是没有flush的
     protected void rollback()
     {
         if (currentOut != null) {
@@ -321,18 +321,18 @@ public class Router extends SocketBase
     protected boolean xhasIn()
     {
         //  If we are in the middle of reading the messages, there are
-        //  definitely more parts available.
+        //  definitely more parts available.  如果我们在读取消息的终结,就存在更多的消息
         if (moreIn) {
             return true;
         }
 
-        //  We may already have a message pre-fetched.
+        //  We may already have a message pre-fetched.  已经存在预取的数据
         if (prefetched) {
             return true;
         }
 
         //  Try to read the next message.
-        //  The message, if read, is kept in the pre-fetch buffer.
+        //  The message, if read, is kept in the pre-fetch buffer.   读取下一个消息,如果读取,会保存在预取的缓存中
         ValueReference<Pipe> pipe = new ValueReference<Pipe>();
         prefetchedMsg = fq.recvPipe(errno, pipe);
 
@@ -340,6 +340,9 @@ public class Router extends SocketBase
         //  after reconnection. The current implementation assumes that
         //  the peer always uses the same identity.
         //  TODO: handle the situation when the peer changes its identity.
+        /**
+         * 有可能我们读取到peer的标记,这发生在重新连接后
+         */
         while (prefetchedMsg != null && prefetchedMsg.isIdentity()) {
             prefetchedMsg = fq.recvPipe(errno, pipe);
         }
@@ -364,8 +367,8 @@ public class Router extends SocketBase
     protected boolean xhasOut()
     {
         //  In theory, ROUTER socket is always ready for writing. Whether actual
-        //  attempt to write succeeds depends on whitch pipe the message is going
-        //  to be routed to.
+        //  attempt to write succeeds depends on which pipe the message is going
+        //  to be routed to.   理论上ROUTER socket总是准备写入的,无论时间试图写入成功依赖于那些pipe的消息将要routed
         return true;
     }
 
@@ -379,7 +382,7 @@ public class Router extends SocketBase
         }
 
         if (msg.size() == 0) {
-            //  Fall back on the auto-generation
+            //  Fall back on the auto-generation     回退到自动生成
             ByteBuffer buf = ByteBuffer.allocate(5);
             buf.put((byte) 0);
             buf.putInt(nextPeerId++);
@@ -395,13 +398,16 @@ public class Router extends SocketBase
                 //  We will allow the new connection to take over this
                 //  identity. Temporarily assign a new identity to the
                 //  existing pipe so we can terminate it asynchronously.
+                /**
+                 * 我们会允许新连接去接管这个标记,暂时指定一个新标记给已经存在的pipe,这样我们能异步的terminate它
+                 */
                 ByteBuffer buf = ByteBuffer.allocate(5);
                 buf.put((byte) 0);
                 buf.putInt(nextPeerId++);
                 Blob newIdentity = Blob.createBlob(buf.array(), false);
 
                 //  Remove the existing identity entry to allow the new
-                //  connection to take the identity.
+                //  connection to take the identity.  移除已经存在的标记,从而允许新连接获取该标记
                 Outpipe existingOutpipe = outpipes.remove(identity);
                 existingOutpipe.pipe.setIdentity(newIdentity);
 
